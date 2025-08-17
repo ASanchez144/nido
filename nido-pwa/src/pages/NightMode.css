@@ -1,0 +1,127 @@
+/* src/pages/NightMode.css */
+.night-mode {
+    background-color: black;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+  
+  .night-mode-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .moon-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+  
+  .night-mode-title {
+    color: #aaa;
+    font-size: 1.2rem;
+  }
+  
+  .breast-selection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 30px;
+  }
+  
+  .left-breast, .right-breast {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #333;
+    color: white;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .left-breast:active, .right-breast:active {
+    background-color: #555;
+  }
+  
+  .baby-container {
+    text-align: center;
+  }
+  
+  .baby-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  
+  .timer {
+    font-size: 1.5rem;
+    font-family: monospace;
+  }
+  
+  .sleep-timer {
+    color: #6495ED;
+    font-size: 1.2rem;
+    font-family: monospace;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .sleep-button, .wet-diaper-button, .dirty-diaper-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .sleep-button {
+    background-color: #191970;
+  }
+  
+  .wet-diaper-button {
+    background-color: #8B4513;
+  }
+  
+  .dirty-diaper-button {
+    background-color: #8B4513;
+  }
+  
+  .stop-button {
+    width: 120px;
+    height: 60px;
+    border-radius: 10px;
+    background-color: #8B0000;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .exit-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: transparent;
+    color: #666;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }

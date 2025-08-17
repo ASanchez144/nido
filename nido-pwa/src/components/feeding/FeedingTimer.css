@@ -1,0 +1,92 @@
+/* src/components/feeding/FeedingTimer.css */
+.feeding-timer {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+  }
+  
+  .feeding-timer h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+  }
+  
+  .timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .start-button {
+    background-color: var(--success-color);
+  }
+  
+  .pause-button {
+    background-color: var(--warning-color);
+  }
+  
+  .stop-button {
+    background-color: var(--error-color);
+  }
+  
+  .reset-button {
+    background-color: #6c757d;
+  }
+  
+  .last-breast-info {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+  }
+
+  /* src/components/feeding/FeedingTimer.css */
+/* Añadir esto al archivo existente */
+
+.feeding-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+  }
+  
+  .both-breasts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  
+  .both-breasts-toggle input {
+    width: auto;
+    margin: 0;
+  }
+  
+  .breathing-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .breathing-button {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    background-color: #e9ecef;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .breathing-button.active {
+    background-color: var(--primary-color);
+    color: white;
+  }

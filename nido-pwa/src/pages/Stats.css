@@ -1,0 +1,130 @@
+/* src/pages/Stats.css */
+.stats-page {
+    padding: 20px;
+    padding-bottom: 70px;
+  }
+  
+  .stats-page h2 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    text-align: center;
+  }
+  
+  .stats-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .stats-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+  }
+  
+  .progress-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .progress-item {
+    margin-bottom: 5px;
+  }
+  
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+  }
+  
+  .progress-bar {
+    height: 8px;
+    background-color: #f2f2f2;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+  }
+  
+  .progress-fill.left-breast {
+    background-color: #007bff;
+  }
+  
+  .progress-fill.right-breast {
+    background-color: #ff6b6b;
+  }
+  
+  .progress-fill.both-breasts {
+    background-color: #20c997;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .stat-item {
+    padding: 10px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--primary-color);
+  }
+  
+  .stat-label {
+    font-size: 0.85rem;
+    color: #666;
+  }
+  
+  .diaper-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .diaper-stat {
+    text-align: center;
+    padding: 10px;
+    border-radius: var(--border-radius);
+  }
+  
+  .diaper-stat.wet {
+    background-color: #e3f2fd;
+  }
+  
+  .diaper-stat.dirty {
+    background-color: #fff3e0;
+  }
+  
+  .diaper-stat.total {
+    background-color: #e8f5e9;
+  }
+  
+  .diaper-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .diaper-label {
+    font-size: 0.8rem;
+  }
+  
+  .last-poop {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #666;
+  }

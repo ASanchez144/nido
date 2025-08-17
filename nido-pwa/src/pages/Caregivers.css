@@ -1,0 +1,164 @@
+/* src/pages/Caregivers.css */
+.caregivers-page {
+    padding: 20px;
+    padding-bottom: 70px;
+  }
+  
+  .caregivers-page h2 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    text-align: center;
+  }
+  
+  .caregivers-list {
+    margin-bottom: 20px;
+  }
+  
+  .caregiver-card {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .caregiver-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 15px;
+  }
+  
+  .caregiver-avatar.blue {
+    background-color: #007bff;
+  }
+  
+  .caregiver-avatar.green {
+    background-color: #28a745;
+  }
+  
+  .caregiver-avatar.purple {
+    background-color: #6f42c1;
+  }
+  
+  .caregiver-info {
+    flex: 1;
+  }
+  
+  .caregiver-info h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  
+  .caregiver-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+  }
+  
+  .caregiver-status {
+    font-size: 0.85rem;
+  }
+  
+  .caregiver-status.active {
+    color: #28a745;
+  }
+  
+  .caregiver-status.inactive {
+    color: #6c757d;
+  }
+  
+  .invite-button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .invite-form {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .invite-form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  
+  .form-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .submit-button, .cancel-button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .submit-button {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .cancel-button {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .activities-section {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .activities-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+  }
+  
+  .activities-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .activities-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f2f2f2;
+    color: #666;
+  }
+  
+  .activities-list li:last-child {
+    border-bottom: none;
+  }

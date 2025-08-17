@@ -1,0 +1,15 @@
+/* src/components/feeding/TimerDisplay.css */
+.timer-display {
+    text-align: center;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+  
+  .timer-text {
+    font-size: 3rem;
+    font-weight: bold;
+    font-family: monospace;
+  }

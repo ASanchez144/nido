@@ -1,0 +1,25 @@
+/* src/styles/variables.css */
+:root {
+    /* Colores principales */
+    --primary-color: #6c63ff;
+    --secondary-color: #ff6584;
+    
+    /* Colores de fondo y texto */
+    --background-color: #f8f9fa;
+    --text-color: #333333;
+    
+    /* Colores de estado */
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --error-color: #dc3545;
+    
+    /* Estilos comunes */
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
+    /* Tamaños de fuente */
+    --font-size-small: 14px;
+    --font-size-medium: 16px;
+    --font-size-large: 18px;
+    --font-size-xlarge: 24px;
+  }
