@@ -1,6 +1,6 @@
 // src/pages/Login.js
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 
@@ -9,20 +9,29 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
+  // src/pages/Login.js - Mejorar manejo de errores
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
       setError('');
       setLoading(true);
-      await login(email, password);
+      
+      console.log('Intentando iniciar sesión con:', email);
+      
+      await signIn(email, password);
       navigate('/');
     } catch (error) {
-      setError('Error al iniciar sesión. Verifica tus credenciales.');
-      console.error('Error al iniciar sesión:', error);
+      console.error('Error detallado al iniciar sesión:', error);
+      
+      if (error.message) {
+        setError(error.message);
+      } else {
+        setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
+      }
     } finally {
       setLoading(false);
     }
@@ -37,7 +46,7 @@ const Login = () => {
         
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="email">Correo electrónico</label>
+            <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
@@ -65,7 +74,7 @@ const Login = () => {
         
         <div className="auth-links">
           <p>
-            ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+            ¿No tienes una cuenta? <Link to="/register">Regístrate</Link>
           </p>
         </div>
       </div>

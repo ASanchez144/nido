@@ -1,34 +1,47 @@
 // src/pages/Register.js
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 
 const Register = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
+    // Validar formulario
     if (password !== confirmPassword) {
       return setError('Las contraseñas no coinciden');
     }
-
+    
     try {
       setError('');
       setLoading(true);
-      await signup(email, password, name);
+      
+      console.log('Intentando registrar usuario:', { email, firstName, lastName });
+      
+      const result = await signUp(email, password, firstName, lastName);
+      console.log('Resultado del registro:', result);
+      
       navigate('/');
     } catch (error) {
-      setError('Error al crear la cuenta. Inténtalo de nuevo.');
-      console.error('Error al registrarse:', error);
+      console.error('Error detallado al registrar usuario:', error);
+      
+      // Mostrar mensaje de error específico si está disponible
+      if (error.message) {
+        setError(`Error: ${error.message}`);
+      } else {
+        setError('Error al crear la cuenta. Por favor, inténtalo de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -43,18 +56,29 @@ const Register = () => {
         
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="name">Nombre</label>
+            <label htmlFor="firstName">Nombre</label>
             <input
               type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               required
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="email">Correo electrónico</label>
+            <label htmlFor="lastName">Apellido</label>
+            <input
+              type="text"
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
@@ -72,7 +96,9 @@ const Register = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength="6"
             />
+            <small className="form-text">La contraseña debe tener al menos 6 caracteres</small>
           </div>
           
           <div className="form-group">
@@ -93,7 +119,7 @@ const Register = () => {
         
         <div className="auth-links">
           <p>
-            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+            ¿Ya tienes una cuenta? <Link to="/login">Iniciar sesión</Link>
           </p>
         </div>
       </div>
