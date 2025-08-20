@@ -2,6 +2,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { BabyProvider } from './contexts/BabyContext';
+import { TrackingProvider } from './contexts/TrackingContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/layout/Header';
 import NavBar from './components/layout/NavBar';
 import Home from './pages/Home';
@@ -16,25 +19,52 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="app">
-          <Header />
-          
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/night-mode" element={<NightMode />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/caregivers" element={<Caregivers />} />
-            </Routes>
-          </main>
-          
-          <NavBar />
-        </div>
-      </Router>
+      <BabyProvider>
+        <TrackingProvider>
+          <Router>
+            <div className="app">
+              <Header />
+              
+              <main className="main-content">
+                <Routes>
+                  {/* Rutas públicas */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  
+                  {/* Rutas protegidas */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/night-mode" element={
+                    <ProtectedRoute>
+                      <NightMode />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/stats" element={
+                    <ProtectedRoute>
+                      <Stats />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/caregivers" element={
+                    <ProtectedRoute>
+                      <Caregivers />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </main>
+              
+              <NavBar />
+            </div>
+          </Router>
+        </TrackingProvider>
+      </BabyProvider>
     </AuthProvider>
   );
 }
