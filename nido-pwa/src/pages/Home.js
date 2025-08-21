@@ -1,7 +1,6 @@
 // src/pages/Home.js
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { useBaby } from '../contexts/BabyContext';
 import { useTracking } from '../contexts/TrackingContext';
 import BabySetup from '../components/baby/BabySetup';
@@ -17,8 +16,7 @@ const Home = () => {
     startSleepSession,
     endSleepSession,
     addDiaperEvent,
-    getTodayStats,
-    loading: trackingLoading
+    getTodayStats
   } = useTracking();
 
   const [showQuickActions, setShowQuickActions] = useState(false);
@@ -32,8 +30,9 @@ const Home = () => {
   };
 
   const handleBabySetupComplete = (newBaby) => {
-    console.log('✅ Home: Baby setup completed:', newBaby);
-    // El BabyContext ya maneja la selección automática
+    console.log('✅ Home: Baby creado con éxito:', newBaby);
+    console.log('✅ Home: Bebés en estado:', babies.length);
+    console.log('✅ Home: Bebé actual:', currentBaby?.name);
   };
 
   const handleFeedingAction = async (type, side) => {
@@ -47,7 +46,7 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Error en alimentación:', error);
-      setLocalError('Error al manejar la alimentación: ' + error.message);
+      setLocalError('Error: ' + error.message);
     }
   };
 
@@ -62,7 +61,7 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Error en sueño:', error);
-      setLocalError('Error al manejar el sueño: ' + error.message);
+      setLocalError('Error: ' + error.message);
     }
   };
 
@@ -73,7 +72,7 @@ const Home = () => {
       setShowQuickActions(false);
     } catch (error) {
       console.error('Error en pañal:', error);
-      setLocalError('Error al registrar el pañal: ' + error.message);
+      setLocalError('Error: ' + error.message);
     }
   };
 
@@ -88,55 +87,162 @@ const Home = () => {
     return `${remainingMinutes}m`;
   };
 
-  // Mostrar setup si no hay bebés
-  if (!babyLoading && babies.length === 0) {
-    return <BabySetup onComplete={handleBabySetupComplete} />;
-  }
+  // DEBUG INFO VISIBLE
+  const debugInfo = (
+    <div style={{
+      position: 'fixed',
+      top: '10px',
+      right: '10px',
+      background: 'rgba(0,0,0,0.8)',
+      color: 'white',
+      padding: '10px',
+      borderRadius: '8px',
+      fontSize: '12px',
+      zIndex: 9999,
+      maxWidth: '200px'
+    }}>
+      <div><strong>🐛 DEBUG:</strong></div>
+      <div>👶 Bebés: {babies.length}</div>
+      <div>🍼 Actual: {currentBaby?.name || 'Ninguno'}</div>
+      <div>⏳ Loading: {String(babyLoading)}</div>
+      <div>❌ Error: {babyError || 'No'}</div>
+      <div>---</div>
+      <div>📏 Longitud: {babies.length}</div>
+      <div>🔄 Condición: {!babyLoading && babies.length === 0 ? 'MOSTRAR SETUP' : 'MOSTRAR HOME'}</div>
+    </div>
+  );
 
   // Mostrar loading
-  if (babyLoading || trackingLoading) {
+  if (babyLoading) {
     return (
-      <div className="home-loading">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando información...</p>
+      <div>
+        {debugInfo}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '60vh',
+          flexDirection: 'column'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #007bff',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '15px'
+          }}></div>
+          <p>Cargando bebés...</p>
+          <style>
+            {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+          </style>
         </div>
+      </div>
+    );
+  }
+
+  // Mostrar setup si no hay bebés
+  if (!babyLoading && babies.length === 0) {
+    return (
+      <div>
+        {debugInfo}
+        <BabySetup onComplete={handleBabySetupComplete} />
       </div>
     );
   }
 
   // Modal de acciones rápidas para pañales
   const QuickActions = () => (
-    <div className="quick-actions-modal">
-      <div className="quick-actions-content">
-        <h3>Registrar Pañal</h3>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '25px',
+        width: '90%',
+        maxWidth: '350px',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
+      }}>
+        <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#007bff' }}>
+          Registrar Pañal
+        </h3>
         
-        <div className="quick-actions-buttons">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '12px',
+          marginBottom: '20px'
+        }}>
           <button 
-            className="wet-button"
             onClick={() => handleDiaperAction('wet')}
+            style={{
+              padding: '18px 12px',
+              backgroundColor: '#e3f2fd',
+              color: '#0d47a1',
+              border: '2px solid #bbdefb',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
           >
             💧 Mojado
           </button>
           
           <button 
-            className="dirty-button"
             onClick={() => handleDiaperAction('dirty')}
+            style={{
+              padding: '18px 12px',
+              backgroundColor: '#fff3e0',
+              color: '#e65100',
+              border: '2px solid #ffcc80',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
           >
             💩 Sucio
           </button>
           
           <button 
-            className="mixed-button"
             onClick={() => handleDiaperAction('mixed')}
+            style={{
+              padding: '18px 12px',
+              backgroundColor: '#f3e5f5',
+              color: '#4a148c',
+              gridColumn: 'span 2',
+              border: '2px solid #ce93d8',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
           >
             💧💩 Ambos
           </button>
         </div>
         
         <button 
-          className="cancel-button"
           onClick={() => setShowQuickActions(false)}
+          style={{
+            width: '100%',
+            padding: '14px',
+            backgroundColor: '#f5f5f5',
+            color: '#666',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
         >
           Cancelar
         </button>
@@ -144,8 +250,11 @@ const Home = () => {
     </div>
   );
 
+  // HOME PRINCIPAL
   return (
     <div className="home-page">
+      {debugInfo}
+      
       <div className="home-header">
         <h1>🪺 Nido</h1>
         {currentBaby && (
@@ -156,103 +265,211 @@ const Home = () => {
       </div>
 
       {(localError || babyError) && (
-        <div className="home-error">
-          <p>❌ {localError || babyError}</p>
-          <button onClick={() => setLocalError('')}>✕</button>
+        <div style={{
+          background: '#fee',
+          color: '#c00',
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span>{localError || babyError}</span>
+          <button 
+            onClick={() => setLocalError('')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#c00',
+              cursor: 'pointer',
+              fontSize: '18px'
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 
       {currentBaby ? (
         <>
           {/* Stats del día */}
-          <div className="today-stats">
-            <h3>📊 Resumen de Hoy</h3>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span className="stat-emoji">🍼</span>
-                <span className="stat-number">{todayStats.feedingCount}</span>
-                <span className="stat-label">Tomas</span>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '25px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', textAlign: 'center', color: '#007bff' }}>
+              📊 Resumen de Hoy
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '15px'
+            }}>
+              <div style={{
+                textAlign: 'center',
+                padding: '15px 10px',
+                background: '#f8f9fa',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '1.8rem' }}>🍼</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#007bff' }}>
+                  {todayStats.feedingCount}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>Tomas</div>
               </div>
-              <div className="stat-card">
-                <span className="stat-emoji">😴</span>
-                <span className="stat-number">{formatDuration(todayStats.sleepDuration)}</span>
-                <span className="stat-label">Sueño</span>
+              <div style={{
+                textAlign: 'center',
+                padding: '15px 10px',
+                background: '#f8f9fa',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '1.8rem' }}>😴</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#007bff' }}>
+                  {formatDuration(todayStats.sleepDuration)}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>Sueño</div>
               </div>
-              <div className="stat-card">
-                <span className="stat-emoji">💩</span>
-                <span className="stat-number">{todayStats.diaperCount.total}</span>
-                <span className="stat-label">Pañales</span>
+              <div style={{
+                textAlign: 'center',
+                padding: '15px 10px',
+                background: '#f8f9fa',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '1.8rem' }}>💩</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#007bff' }}>
+                  {todayStats.diaperCount.total}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>Pañales</div>
               </div>
             </div>
           </div>
 
           {/* Acciones principales */}
-          <div className="main-actions">
-            <h3>⚡ Acciones Rápidas</h3>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '25px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#007bff' }}>
+              ⚡ Acciones Rápidas
+            </h3>
             
             {/* Alimentación */}
-            <div className="action-section">
-              <h4>🍼 Alimentación</h4>
+            <div style={{ marginBottom: '25px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>🍼 Alimentación</h4>
               {currentFeedingSession ? (
-                <div className="active-session">
-                  <p>
+                <div style={{
+                  background: '#e8f5e8',
+                  border: '2px solid #4caf50',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ margin: '0 0 8px 0', color: '#2e7d32', fontWeight: '500' }}>
                     Sesión activa: {currentFeedingSession.type} 
                     {currentFeedingSession.side && ` (${currentFeedingSession.side})`}
                   </p>
-                  <p className="session-timer">
-                    ⏱️ {formatDuration(Date.now() - new Date(currentFeedingSession.start_time).getTime())}
-                  </p>
                   <button 
-                    className="end-session-btn"
                     onClick={() => handleFeedingAction()}
+                    style={{
+                      background: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 20px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
                   >
                     ⏹️ Terminar Sesión
                   </button>
                 </div>
               ) : (
-                <div className="feeding-buttons">
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '10px'
+                }}>
                   <button 
-                    className="feeding-btn left"
                     onClick={() => handleFeedingAction('breastfeeding', 'left')}
+                    style={{
+                      padding: '15px 12px',
+                      border: '2px solid #ff9800',
+                      borderRadius: '8px',
+                      background: 'white',
+                      color: '#ff9800',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
                   >
                     ← Pecho Izquierdo
                   </button>
                   <button 
-                    className="feeding-btn right"
                     onClick={() => handleFeedingAction('breastfeeding', 'right')}
+                    style={{
+                      padding: '15px 12px',
+                      border: '2px solid #9c27b0',
+                      borderRadius: '8px',
+                      background: 'white',
+                      color: '#9c27b0',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
                   >
                     Pecho Derecho →
-                  </button>
-                  <button 
-                    className="feeding-btn bottle"
-                    onClick={() => handleFeedingAction('bottle', null)}
-                  >
-                    🍼 Biberón
                   </button>
                 </div>
               )}
             </div>
 
             {/* Sueño */}
-            <div className="action-section">
-              <h4>😴 Sueño</h4>
+            <div style={{ marginBottom: '25px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>😴 Sueño</h4>
               {currentSleepSession ? (
-                <div className="active-session">
-                  <p>Durmiendo...</p>
-                  <p className="session-timer">
-                    ⏱️ {formatDuration(Date.now() - new Date(currentSleepSession.start_time).getTime())}
+                <div style={{
+                  background: '#e8f5e8',
+                  border: '2px solid #4caf50',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ margin: '0 0 8px 0', color: '#2e7d32', fontWeight: '500' }}>
+                    Durmiendo...
                   </p>
                   <button 
-                    className="end-session-btn"
                     onClick={handleSleepAction}
+                    style={{
+                      background: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 20px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
                   >
                     ⏰ Despertar
                   </button>
                 </div>
               ) : (
                 <button 
-                  className="sleep-btn"
                   onClick={handleSleepAction}
+                  style={{
+                    width: '100%',
+                    padding: '15px',
+                    background: '#673ab7',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
                 >
                   😴 Empezar Sueño
                 </button>
@@ -260,15 +477,30 @@ const Home = () => {
             </div>
 
             {/* Pañales */}
-            <div className="action-section">
-              <h4>💩 Pañales</h4>
+            <div>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>💩 Pañales</h4>
               <button 
-                className="diaper-btn"
                 onClick={() => setShowQuickActions(true)}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  background: '#795548',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  marginBottom: '10px'
+                }}
               >
                 📝 Registrar Cambio
               </button>
-              <div className="diaper-stats-summary">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '0.85rem',
+                color: '#666'
+              }}>
                 <span>Hoy: {todayStats.diaperCount.total} cambios</span>
                 <span>(💧{todayStats.diaperCount.wet} 💩{todayStats.diaperCount.dirty})</span>
               </div>
@@ -276,22 +508,65 @@ const Home = () => {
           </div>
 
           {/* Enlaces de navegación */}
-          <div className="navigation-links">
-            <Link to="/night-mode" className="nav-link night-mode">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '12px',
+            marginBottom: '20px'
+          }}>
+            <Link 
+              to="/night-mode" 
+              style={{
+                padding: '15px',
+                textAlign: 'center',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                background: '#37474f',
+                color: 'white',
+                fontWeight: '500'
+              }}
+            >
               🌙 Modo Noche
             </Link>
-            <Link to="/stats" className="nav-link stats">
+            <Link 
+              to="/stats" 
+              style={{
+                padding: '15px',
+                textAlign: 'center',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                background: '#4caf50',
+                color: 'white',
+                fontWeight: '500'
+              }}
+            >
               📊 Estadísticas
-            </Link>
-            <Link to="/settings" className="nav-link settings">
-              ⚙️ Configuración
             </Link>
           </div>
         </>
       ) : (
-        <div className="no-baby-selected">
-          <p>🤔 No hay ningún bebé seleccionado</p>
-          <Link to="/settings" className="setup-link">
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '40px 20px',
+          background: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <p style={{ marginBottom: '20px', color: '#666', fontSize: '1.1rem' }}>
+            🤔 No hay ningún bebé seleccionado
+          </p>
+          <Link 
+            to="/settings" 
+            style={{
+              display: 'inline-block',
+              padding: '12px 24px',
+              background: '#007bff',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontWeight: '500'
+            }}
+          >
             Configurar bebé
           </Link>
         </div>

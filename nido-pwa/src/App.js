@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { BabyProvider } from './contexts/BabyContext';
 import { TrackingProvider } from './contexts/TrackingContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import Header from './components/layout/Header';
 import NavBar from './components/layout/NavBar';
 import Home from './pages/Home';

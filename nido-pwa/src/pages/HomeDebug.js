@@ -36,7 +36,7 @@ const HomeDebug = () => {
                   console.log('👶 Añadiendo bebé de prueba...');
                   await baby.addBaby({
                     name: 'Bebé de Prueba',
-                    birth_date: new Date().toISOString().split('T')[0]
+                    birthdate: new Date().toISOString().split('T')[0]
                   });
                   console.log('✅ Bebé añadido exitosamente');
                 } catch (error) {
@@ -72,7 +72,7 @@ const HomeDebug = () => {
       {baby.currentBaby && (
         <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#d4edda', borderRadius: '5px' }}>
           <h3>🎯 Bebé Seleccionado: {baby.currentBaby.name}</h3>
-          <p>Fecha nacimiento: {baby.currentBaby.birth_date}</p>
+          <p>Fecha nacimiento: {baby.currentBaby.birthdate}</p>
           <p>ID: {baby.currentBaby.id}</p>
           
           <div style={{ marginTop: '10px' }}>
