@@ -20,6 +20,13 @@ const Home = () => {
   } = useTracking();
 
   const [showQuickActions, setShowQuickActions] = useState(false);
+  const [showStoolDetails, setShowStoolDetails] = useState(false);
+  const [pendingDiaperType, setPendingDiaperType] = useState('');
+  const [stoolDetails, setStoolDetails] = useState({
+    color: '',
+    texture: '',
+    hasMucus: false
+  });
   const [localError, setLocalError] = useState('');
 
   // Stats del día
@@ -31,8 +38,6 @@ const Home = () => {
 
   const handleBabySetupComplete = (newBaby) => {
     console.log('✅ Home: Baby creado con éxito:', newBaby);
-    console.log('✅ Home: Bebés en estado:', babies.length);
-    console.log('✅ Home: Bebé actual:', currentBaby?.name);
   };
 
   const handleFeedingAction = async (type, side) => {
@@ -66,10 +71,32 @@ const Home = () => {
   };
 
   const handleDiaperAction = async (type) => {
+    // Si es caca o ambos, mostrar modal de detalles
+    if (type === 'dirty' || type === 'mixed') {
+      setPendingDiaperType(type);
+      setShowStoolDetails(true);
+      setShowQuickActions(false);
+      return;
+    }
+    
+    // Para solo mojado, enviar directamente
     try {
       setLocalError('');
       await addDiaperEvent(type);
       setShowQuickActions(false);
+    } catch (error) {
+      console.error('Error en pañal:', error);
+      setLocalError('Error: ' + error.message);
+    }
+  };
+
+  const handleStoolSubmit = async () => {
+    try {
+      setLocalError('');
+      await addDiaperEvent(pendingDiaperType, stoolDetails);
+      setShowStoolDetails(false);
+      setStoolDetails({ color: '', texture: '', hasMucus: false });
+      setPendingDiaperType('');
     } catch (error) {
       console.error('Error en pañal:', error);
       setLocalError('Error: ' + error.message);
@@ -87,69 +114,36 @@ const Home = () => {
     return `${remainingMinutes}m`;
   };
 
-  // DEBUG INFO VISIBLE
-  const debugInfo = (
-    <div style={{
-      position: 'fixed',
-      top: '10px',
-      right: '10px',
-      background: 'rgba(0,0,0,0.8)',
-      color: 'white',
-      padding: '10px',
-      borderRadius: '8px',
-      fontSize: '12px',
-      zIndex: 9999,
-      maxWidth: '200px'
-    }}>
-      <div><strong>🐛 DEBUG:</strong></div>
-      <div>👶 Bebés: {babies.length}</div>
-      <div>🍼 Actual: {currentBaby?.name || 'Ninguno'}</div>
-      <div>⏳ Loading: {String(babyLoading)}</div>
-      <div>❌ Error: {babyError || 'No'}</div>
-      <div>---</div>
-      <div>📏 Longitud: {babies.length}</div>
-      <div>🔄 Condición: {!babyLoading && babies.length === 0 ? 'MOSTRAR SETUP' : 'MOSTRAR HOME'}</div>
-    </div>
-  );
-
   // Mostrar loading
   if (babyLoading) {
     return (
-      <div>
-        {debugInfo}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '60vh',
-          flexDirection: 'column'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #007bff',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '15px'
-          }}></div>
-          <p>Cargando bebés...</p>
-          <style>
-            {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
-          </style>
-        </div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '60vh',
+        flexDirection: 'column'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #007bff',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '15px'
+        }}></div>
+        <p>Cargando...</p>
+        <style>
+          {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+        </style>
       </div>
     );
   }
 
   // Mostrar setup si no hay bebés
-  if (!babyLoading && babies.length === 0) {
-    return (
-      <div>
-        {debugInfo}
-        <BabySetup onComplete={handleBabySetupComplete} />
-      </div>
-    );
+  if (babies.length === 0) {
+    return <BabySetup onComplete={handleBabySetupComplete} />;
   }
 
   // Modal de acciones rápidas para pañales
@@ -250,11 +244,156 @@ const Home = () => {
     </div>
   );
 
+  // Modal de detalles de caca
+  const StoolDetailsModal = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '25px',
+        width: '90%',
+        maxWidth: '400px',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+      }}>
+        <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#007bff' }}>
+          Detalles de la Caca
+        </h3>
+        
+        {/* Selector de Color */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+            Color:
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+            {[
+              { value: 'yellow', label: '🟡 Amarillo', color: '#ffeb3b' },
+              { value: 'brown', label: '🟤 Marrón', color: '#8d6e63' },
+              { value: 'green', label: '🟢 Verde', color: '#4caf50' },
+              { value: 'orange', label: '🟠 Naranja', color: '#ff9800' },
+              { value: 'red', label: '🔴 Rojizo', color: '#f44336' },
+              { value: 'black', label: '⚫ Negro', color: '#424242' }
+            ].map(color => (
+              <button
+                key={color.value}
+                onClick={() => setStoolDetails(prev => ({ ...prev, color: color.value }))}
+                style={{
+                  padding: '10px 8px',
+                  border: stoolDetails.color === color.value ? '3px solid #007bff' : '2px solid #ddd',
+                  borderRadius: '8px',
+                  backgroundColor: stoolDetails.color === color.value ? '#f0f8ff' : 'white',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  textAlign: 'center'
+                }}
+              >
+                {color.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Selector de Textura */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+            Textura:
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {[
+              { value: 'liquid', label: '💧 Líquida' },
+              { value: 'soft', label: '🧈 Blanda' },
+              { value: 'normal', label: '🥜 Normal' },
+              { value: 'hard', label: '🪨 Dura' }
+            ].map(texture => (
+              <button
+                key={texture.value}
+                onClick={() => setStoolDetails(prev => ({ ...prev, texture: texture.value }))}
+                style={{
+                  padding: '12px 8px',
+                  border: stoolDetails.texture === texture.value ? '3px solid #007bff' : '2px solid #ddd',
+                  borderRadius: '8px',
+                  backgroundColor: stoolDetails.texture === texture.value ? '#f0f8ff' : 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  textAlign: 'center'
+                }}
+              >
+                {texture.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Selector de Mocos */}
+        <div style={{ marginBottom: '25px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={stoolDetails.hasMucus}
+              onChange={(e) => setStoolDetails(prev => ({ ...prev, hasMucus: e.target.checked }))}
+              style={{ marginRight: '8px' }}
+            />
+            <span>🟢 Contiene mocos</span>
+          </label>
+        </div>
+
+        {/* Botones */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={handleStoolSubmit}
+            style={{
+              flex: 1,
+              padding: '14px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            Registrar
+          </button>
+          
+          <button 
+            onClick={() => {
+              setShowStoolDetails(false);
+              setStoolDetails({ color: '', texture: '', hasMucus: false });
+              setPendingDiaperType('');
+            }}
+            style={{
+              flex: 1,
+              padding: '14px',
+              backgroundColor: '#f5f5f5',
+              color: '#666',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // HOME PRINCIPAL
   return (
     <div className="home-page">
-      {debugInfo}
-      
       <div className="home-header">
         <h1>🪺 Nido</h1>
         {currentBaby && (
@@ -373,7 +512,7 @@ const Home = () => {
                 }}>
                   <p style={{ margin: '0 0 8px 0', color: '#2e7d32', fontWeight: '500' }}>
                     Sesión activa: {currentFeedingSession.type} 
-                    {currentFeedingSession.side && ` (${currentFeedingSession.side})`}
+                    {currentFeedingSession.breast && ` (${currentFeedingSession.breast})`}
                   </p>
                   <button 
                     onClick={() => handleFeedingAction()}
@@ -573,6 +712,7 @@ const Home = () => {
       )}
 
       {showQuickActions && <QuickActions />}
+      {showStoolDetails && <StoolDetailsModal />}
     </div>
   );
 };

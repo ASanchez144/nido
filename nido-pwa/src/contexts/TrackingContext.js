@@ -45,43 +45,49 @@ export const TrackingProvider = ({ children }) => {
 
   const loadTodayData = async () => {
     if (!currentBaby) return;
-
+  
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-
-      // Cargar sesiones de alimentación
-      const { data: feedingSessions } = await supabase
+  
+      console.log('Cargando datos para:', currentBaby.id, 'desde:', today.toISOString());
+  
+      // Usar los nombres EXACTOS de tus tablas
+      const { data: feedingSessions, error: feedError } = await supabase
         .from('feeding_sessions')
         .select('*')
         .eq('baby_id', currentBaby.id)
         .gte('start_time', today.toISOString())
         .lt('start_time', tomorrow.toISOString());
-
-      // Cargar sesiones de sueño
-      const { data: sleepSessions } = await supabase
+  
+      console.log('Feeding sessions cargadas:', feedingSessions);
+  
+      const { data: sleepSessions, error: sleepError } = await supabase
         .from('sleep_sessions')
         .select('*')
         .eq('baby_id', currentBaby.id)
         .gte('start_time', today.toISOString())
         .lt('start_time', tomorrow.toISOString());
-
-      // Cargar eventos de pañales
-      const { data: diaperEvents } = await supabase
+  
+      const { data: diaperEvents, error: diaperError } = await supabase
         .from('diaper_events')
         .select('*')
         .eq('baby_id', currentBaby.id)
         .gte('timestamp', today.toISOString())
         .lt('timestamp', tomorrow.toISOString());
-
+  
+      if (feedError) console.error('Feed error:', feedError);
+      if (sleepError) console.error('Sleep error:', sleepError);
+      if (diaperError) console.error('Diaper error:', diaperError);
+  
       setTodayData({
         feedingSessions: feedingSessions || [],
         sleepSessions: sleepSessions || [],
         diaperEvents: diaperEvents || []
       });
-
+  
     } catch (error) {
       console.error('Error cargando datos del día:', error);
     }
@@ -122,9 +128,8 @@ export const TrackingProvider = ({ children }) => {
     try {
       const sessionData = {
         baby_id: currentBaby.id,
-        user_id: user.id,
-        type: type,
-        side: side,
+        caregiver_id: user.id,
+        breast: side === 'left' ? 'left' : 'right',
         start_time: new Date().toISOString()
       };
 
@@ -175,7 +180,7 @@ export const TrackingProvider = ({ children }) => {
     try {
       const sessionData = {
         baby_id: currentBaby.id,
-        user_id: user.id,
+        caregiver_id: user.id,
         start_time: new Date().toISOString()
       };
 
@@ -226,7 +231,7 @@ export const TrackingProvider = ({ children }) => {
     try {
       const eventData = {
         baby_id: currentBaby.id,
-        user_id: user.id,
+        caregiver_id: user.id,
         type: type,
         timestamp: new Date().toISOString()
       };
@@ -249,7 +254,8 @@ export const TrackingProvider = ({ children }) => {
   };
 
   const getTodayStats = () => {
-    const feedingCount = todayData.feedingSessions.filter(s => s.end_time).length;
+    // Contar TODAS las sesiones de alimentación del día, no solo las terminadas
+    const feedingCount = todayData.feedingSessions.length;
     
     const sleepDuration = todayData.sleepSessions
       .filter(s => s.end_time)
@@ -258,14 +264,16 @@ export const TrackingProvider = ({ children }) => {
         const end = new Date(session.end_time);
         return total + (end - start);
       }, 0);
-
+  
     const diaperCount = {
       total: todayData.diaperEvents.length,
       wet: todayData.diaperEvents.filter(e => e.type === 'wet').length,
       dirty: todayData.diaperEvents.filter(e => e.type === 'dirty').length,
       mixed: todayData.diaperEvents.filter(e => e.type === 'mixed').length
     };
-
+  
+    console.log('Stats calculadas:', { feedingCount, sleepDuration, diaperCount, todayData });
+  
     return {
       feedingCount,
       sleepDuration,
