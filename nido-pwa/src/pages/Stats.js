@@ -5,7 +5,7 @@ import { useBaby } from '../contexts/BabyContext';
 import './Stats.css';
 
 const Stats = () => {
-  const { todayData } = useTracking();
+  const { todayData, getStoolColorLabel, getStoolTextureLabel } = useTracking();
   const { currentBaby } = useBaby();
   const [weekData, setWeekData] = useState({
     feedingSessions: [],
@@ -66,9 +66,9 @@ const Stats = () => {
 
   // Calcular estadísticas de alimentación
   const calculateFeedingStats = () => {
-    const leftBreastSessions = weekData.feedingSessions.filter(s => s.breast === 'left').length;
-    const rightBreastSessions = weekData.feedingSessions.filter(s => s.breast === 'right').length;
-    const bothBreastSessions = weekData.feedingSessions.filter(s => !s.breast || s.breast === 'both').length;
+    const leftBreastSessions = weekData.feedingSessions.filter(s => s.side === 'left').length;
+    const rightBreastSessions = weekData.feedingSessions.filter(s => s.side === 'right').length;
+    const bothBreastSessions = weekData.feedingSessions.filter(s => !s.side || s.side === 'both').length;
     
     const total = leftBreastSessions + rightBreastSessions + bothBreastSessions;
     
@@ -129,7 +129,7 @@ const Stats = () => {
     };
   };
 
-  // Calcular estadísticas de pañales
+  // Calcular estadísticas de pañales - CORREGIDO PARA CONTAR "AMBOS" CORRECTAMENTE
   const calculateDiaperStats = () => {
     const wetCount = todayData.diaperEvents.filter(e => e.type === 'wet').length;
     const dirtyCount = todayData.diaperEvents.filter(e => e.type === 'dirty').length;
@@ -156,10 +156,66 @@ const Stats = () => {
     }
 
     return {
-      wet: wetCount,
-      dirty: dirtyCount + mixedCount,
+      wet: wetCount + mixedCount, // "Ambos" cuenta como mojado también
+      dirty: dirtyCount + mixedCount, // "Ambos" cuenta como caca también
       total: wetCount + dirtyCount + mixedCount,
       lastPoop
+    };
+  };
+
+  // NUEVA FUNCIÓN: Calcular estadísticas detalladas de caca
+  const calculateStoolStats = () => {
+    // Eventos de caca de hoy (dirty + mixed)
+    const todayStoolEvents = todayData.diaperEvents.filter(e => 
+      e.type === 'dirty' || e.type === 'mixed'
+    );
+
+    // Eventos de caca de la semana
+    const weekStoolEvents = weekData.diaperEvents.filter(e => 
+      e.type === 'dirty' || e.type === 'mixed'
+    );
+
+    // Contar colores más frecuentes (solo de hoy)
+    const colorCounts = {};
+    const textureCounts = {};
+    
+    todayStoolEvents.forEach(event => {
+      if (event.stool_color) {
+        colorCounts[event.stool_color] = (colorCounts[event.stool_color] || 0) + 1;
+      }
+      if (event.stool_texture) {
+        textureCounts[event.stool_texture] = (textureCounts[event.stool_texture] || 0) + 1;
+      }
+    });
+
+    // Color y textura más frecuentes
+    const mostFrequentColor = Object.keys(colorCounts).length > 0 
+      ? Object.keys(colorCounts).reduce((a, b) => colorCounts[a] > colorCounts[b] ? a : b)
+      : null;
+    
+    const mostFrequentTexture = Object.keys(textureCounts).length > 0
+      ? Object.keys(textureCounts).reduce((a, b) => textureCounts[a] > textureCounts[b] ? a : b)
+      : null;
+
+    // Eventos con mocos
+    const withMucusToday = todayStoolEvents.filter(e => e.has_mucus).length;
+
+    // Promedio semanal de cacas por día
+    const weeklyAverage = weekStoolEvents.length > 0 ? (weekStoolEvents.length / 7).toFixed(1) : '0';
+
+    // Último evento con detalles
+    const lastDetailedEvent = todayStoolEvents
+      .filter(e => e.stool_color || e.stool_texture)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+
+    return {
+      todayCount: todayStoolEvents.length,
+      weeklyAverage,
+      mostFrequentColor,
+      mostFrequentTexture,
+      withMucusToday,
+      lastDetailedEvent,
+      hasDetailedData: todayStoolEvents.some(e => e.stool_color || e.stool_texture)
     };
   };
 
@@ -175,6 +231,7 @@ const Stats = () => {
   const feedingStats = calculateFeedingStats();
   const sleepStats = calculateSleepStats();
   const diaperStats = calculateDiaperStats();
+  const stoolStats = calculateStoolStats(); // NUEVA estadística
 
   if (!currentBaby) {
     return (
@@ -216,19 +273,6 @@ const Stats = () => {
               <div 
                 className="progress-fill right-breast" 
                 style={{width: `${feedingStats.rightBreast}%`}}
-              ></div>
-            </div>
-          </div>
-          
-          <div className="progress-item">
-            <div className="progress-label">
-              <span>Ambos Pechos</span>
-              <span>{feedingStats.bothBreasts}%</span>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill both-breasts" 
-                style={{width: `${feedingStats.bothBreasts}%`}}
               ></div>
             </div>
           </div>
@@ -276,6 +320,86 @@ const Stats = () => {
         <div className="last-poop">
           <span>Última caca: hace {diaperStats.lastPoop}</span>
         </div>
+      </div>
+
+      {/* NUEVA SECCIÓN: Detalles de Caca */}
+      <div className="stats-card">
+        <h3>💩 Análisis de Cacas (Hoy)</h3>
+        
+        {stoolStats.hasDetailedData ? (
+          <>
+            <div className="stool-summary">
+              <div className="stool-stat">
+                <div className="stool-value">{stoolStats.todayCount}</div>
+                <div className="stool-label">Cacas hoy</div>
+              </div>
+              <div className="stool-stat">
+                <div className="stool-value">{stoolStats.weeklyAverage}</div>
+                <div className="stool-label">Promedio/día</div>
+              </div>
+              <div className="stool-stat">
+                <div className="stool-value">{stoolStats.withMucusToday}</div>
+                <div className="stool-label">Con mocos</div>
+              </div>
+            </div>
+
+            {/* Características más frecuentes */}
+            <div className="stool-details">
+              {stoolStats.mostFrequentColor && (
+                <div className="stool-detail-item">
+                  <span className="detail-label">Color más frecuente:</span>
+                  <span className="detail-value">
+                    {getStoolColorLabel ? getStoolColorLabel(stoolStats.mostFrequentColor) : stoolStats.mostFrequentColor}
+                  </span>
+                </div>
+              )}
+              
+              {stoolStats.mostFrequentTexture && (
+                <div className="stool-detail-item">
+                  <span className="detail-label">Textura más frecuente:</span>
+                  <span className="detail-value">
+                    {getStoolTextureLabel ? getStoolTextureLabel(stoolStats.mostFrequentTexture) : stoolStats.mostFrequentTexture}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Último evento detallado */}
+            {stoolStats.lastDetailedEvent && (
+              <div className="last-stool-event">
+                <h4>Última caca registrada:</h4>
+                <div className="event-details">
+                  <span className="event-time">
+                    {new Date(stoolStats.lastDetailedEvent.timestamp).toLocaleTimeString('es', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                  <div className="event-characteristics">
+                    {stoolStats.lastDetailedEvent.stool_color && (
+                      <span className="characteristic">
+                        🎨 {getStoolColorLabel ? getStoolColorLabel(stoolStats.lastDetailedEvent.stool_color) : stoolStats.lastDetailedEvent.stool_color}
+                      </span>
+                    )}
+                    {stoolStats.lastDetailedEvent.stool_texture && (
+                      <span className="characteristic">
+                        🥄 {getStoolTextureLabel ? getStoolTextureLabel(stoolStats.lastDetailedEvent.stool_texture) : stoolStats.lastDetailedEvent.stool_texture}
+                      </span>
+                    )}
+                    {stoolStats.lastDetailedEvent.has_mucus && (
+                      <span className="characteristic mucus">🫧 Con mocos</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="no-stool-data">
+            <p>📝 Aún no hay detalles de caca registrados hoy</p>
+            <p className="hint">Registra los detalles de color y textura para ver estadísticas aquí</p>
+          </div>
+        )}
       </div>
       
       <div className="stats-card">

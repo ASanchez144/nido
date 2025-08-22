@@ -128,3 +128,205 @@
     font-size: 0.9rem;
     color: #666;
   }
+  
+  /* NUEVOS ESTILOS PARA SECCIÓN DE CACAS */
+  
+  /* Resumen de estadísticas de caca */
+  .stool-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .stool-stat {
+    text-align: center;
+    padding: 12px;
+    background-color: #fff3e0;
+    border-radius: var(--border-radius);
+    border: 1px solid #ffcc80;
+  }
+  
+  .stool-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #e65100;
+    margin-bottom: 4px;
+  }
+  
+  .stool-label {
+    font-size: 0.8rem;
+    color: #bf360c;
+  }
+  
+  /* Detalles de características */
+  .stool-details {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .stool-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .stool-detail-item:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .detail-label {
+    font-weight: 500;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .detail-value {
+    font-weight: 600;
+    color: #333;
+    background-color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  
+  /* Último evento detallado */
+  .last-stool-event {
+    background-color: #e8f5e9;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    border-left: 4px solid #4caf50;
+  }
+  
+  .last-stool-event h4 {
+    margin: 0 0 10px 0;
+    color: #2e7d32;
+    font-size: 1rem;
+  }
+  
+  .event-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .event-time {
+    font-weight: 600;
+    color: #1b5e20;
+    font-size: 0.9rem;
+  }
+  
+  .event-characteristics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .characteristic {
+    background-color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+  }
+  
+  .characteristic.mucus {
+    background-color: #fff3e0;
+    border-color: #ffcc80;
+    color: #f57c00;
+  }
+  
+  /* Sin datos de caca */
+  .no-stool-data {
+    text-align: center;
+    padding: 30px 20px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    border: 2px dashed #dee2e6;
+  }
+  
+  .no-stool-data p {
+    margin-bottom: 8px;
+    color: #666;
+  }
+  
+  .no-stool-data .hint {
+    font-size: 0.85rem;
+    color: #999;
+    font-style: italic;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .stats-page {
+      padding: 15px;
+      padding-bottom: 60px;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    
+    .diaper-stats {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    
+    .stool-summary {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    
+    .progress-bars {
+      gap: 8px;
+    }
+    
+    .stool-detail-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    
+    .event-characteristics {
+      justify-content: flex-start;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .stats-card {
+      padding: 15px;
+    }
+    
+    .stool-summary {
+      margin-bottom: 15px;
+    }
+    
+    .stool-stat {
+      padding: 8px;
+    }
+    
+    .stool-value {
+      font-size: 1.1rem;
+    }
+    
+    .stool-label {
+      font-size: 0.75rem;
+    }
+    
+    .last-stool-event {
+      padding: 12px;
+    }
+    
+    .characteristic {
+      font-size: 0.75rem;
+      padding: 3px 6px;
+    }
+  }

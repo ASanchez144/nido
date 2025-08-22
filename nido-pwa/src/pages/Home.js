@@ -1,5 +1,5 @@
 // src/pages/Home.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
 import { useTracking } from '../contexts/TrackingContext';
@@ -28,6 +28,11 @@ const Home = () => {
     hasMucus: false
   });
   const [localError, setLocalError] = useState('');
+  
+  // Estados para timer
+  const [feedingElapsedTime, setFeedingElapsedTime] = useState(0);
+  const [sleepElapsedTime, setSleepElapsedTime] = useState(0);
+  const [lastBreast, setLastBreast] = useState('');
 
   // Stats del día
   const todayStats = currentBaby ? getTodayStats() : {
@@ -35,6 +40,68 @@ const Home = () => {
     sleepDuration: 0,
     diaperCount: { total: 0, wet: 0, dirty: 0, mixed: 0 }
   };
+
+  // Cargar último pecho
+  useEffect(() => {
+    if (currentBaby) {
+      const stored = localStorage.getItem(`lastBreast_${currentBaby.id}`);
+      if (stored) {
+        setLastBreast(stored);
+      }
+    }
+  }, [currentBaby]);
+
+  // Timer alimentación CON DEBUG
+  useEffect(() => {
+    console.log('🔄 Timer alimentación - currentFeedingSession:', currentFeedingSession);
+    
+    let interval;
+    if (currentFeedingSession) {
+      console.log('⏱️ Iniciando timer para sesión:', currentFeedingSession);
+      
+      const updateTimer = () => {
+        const start = new Date(currentFeedingSession.start_time);
+        const now = new Date();
+        const elapsed = now - start;
+        setFeedingElapsedTime(elapsed);
+        console.log('⏰ Timer actualizado:', { start: start.toLocaleTimeString(), elapsed });
+      };
+      
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
+    } else {
+      console.log('❌ No hay sesión activa, reseteando timer');
+      setFeedingElapsedTime(0);
+    }
+    
+    return () => {
+      if (interval) {
+        console.log('🧹 Limpiando interval de alimentación');
+        clearInterval(interval);
+      }
+    };
+  }, [currentFeedingSession]);
+
+  // Timer sueño
+  useEffect(() => {
+    let interval;
+    if (currentSleepSession) {
+      const updateTimer = () => {
+        const start = new Date(currentSleepSession.start_time);
+        const now = new Date();
+        setSleepElapsedTime(now - start);
+      };
+      
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
+    } else {
+      setSleepElapsedTime(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentSleepSession]);
 
   const handleBabySetupComplete = (newBaby) => {
     console.log('✅ Home: Baby creado con éxito:', newBaby);
@@ -44,13 +111,21 @@ const Home = () => {
     try {
       setLocalError('');
       
+      console.log('🍼 handleFeedingAction llamado:', { type, side, currentFeedingSession });
+      
       if (currentFeedingSession) {
+        console.log('⏹️ Terminando sesión existente:', currentFeedingSession.id);
         await endFeedingSession(currentFeedingSession.id);
+        // Guardar último pecho
+        localStorage.setItem(`lastBreast_${currentBaby.id}`, currentFeedingSession.breast);
+        setLastBreast(currentFeedingSession.breast);
       } else {
-        await startFeedingSession(type, side);
+        console.log('▶️ Iniciando nueva sesión:', { type, side });
+        const result = await startFeedingSession(type, side);
+        console.log('✅ Sesión creada:', result);
       }
     } catch (error) {
-      console.error('Error en alimentación:', error);
+      console.error('❌ Error en alimentación:', error);
       setLocalError('Error: ' + error.message);
     }
   };
@@ -71,7 +146,6 @@ const Home = () => {
   };
 
   const handleDiaperAction = async (type) => {
-    // Si es caca o ambos, mostrar modal de detalles
     if (type === 'dirty' || type === 'mixed') {
       setPendingDiaperType(type);
       setShowStoolDetails(true);
@@ -79,7 +153,6 @@ const Home = () => {
       return;
     }
     
-    // Para solo mojado, enviar directamente
     try {
       setLocalError('');
       await addDiaperEvent(type);
@@ -114,135 +187,34 @@ const Home = () => {
     return `${remainingMinutes}m`;
   };
 
-  // Mostrar loading
+  const formatTimer = (milliseconds) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getSuggestedBreast = () => {
+    if (!lastBreast) return 'left';
+    return lastBreast === 'left' ? 'right' : 'left';
+  };
+
+  // Loading
   if (babyLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '60vh',
-        flexDirection: 'column'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #007bff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          marginBottom: '15px'
-        }}></div>
-        <p>Cargando...</p>
-        <style>
-          {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
-        </style>
+      <div className="home-loading">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando información del bebé...</p>
+        </div>
       </div>
     );
   }
 
-  // Mostrar setup si no hay bebés
+  // Setup si no hay bebés
   if (babies.length === 0) {
     return <BabySetup onComplete={handleBabySetupComplete} />;
   }
-
-  // Modal de acciones rápidas para pañales
-  const QuickActions = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '25px',
-        width: '90%',
-        maxWidth: '350px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
-      }}>
-        <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#007bff' }}>
-          Registrar Pañal
-        </h3>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '12px',
-          marginBottom: '20px'
-        }}>
-          <button 
-            onClick={() => handleDiaperAction('wet')}
-            style={{
-              padding: '18px 12px',
-              backgroundColor: '#e3f2fd',
-              color: '#0d47a1',
-              border: '2px solid #bbdefb',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            💧 Mojado
-          </button>
-          
-          <button 
-            onClick={() => handleDiaperAction('dirty')}
-            style={{
-              padding: '18px 12px',
-              backgroundColor: '#fff3e0',
-              color: '#e65100',
-              border: '2px solid #ffcc80',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            💩 Sucio
-          </button>
-          
-          <button 
-            onClick={() => handleDiaperAction('mixed')}
-            style={{
-              padding: '18px 12px',
-              backgroundColor: '#f3e5f5',
-              color: '#4a148c',
-              gridColumn: 'span 2',
-              border: '2px solid #ce93d8',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            💧💩 Ambos
-          </button>
-        </div>
-        
-        <button 
-          onClick={() => setShowQuickActions(false)}
-          style={{
-            width: '100%',
-            padding: '14px',
-            backgroundColor: '#f5f5f5',
-            color: '#666',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
-  );
 
   // Modal de detalles de caca
   const StoolDetailsModal = () => (
@@ -279,12 +251,14 @@ const Home = () => {
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
             {[
-              { value: 'yellow', label: '🟡 Amarillo', color: '#ffeb3b' },
-              { value: 'brown', label: '🟤 Marrón', color: '#8d6e63' },
-              { value: 'green', label: '🟢 Verde', color: '#4caf50' },
-              { value: 'orange', label: '🟠 Naranja', color: '#ff9800' },
-              { value: 'red', label: '🔴 Rojizo', color: '#f44336' },
-              { value: 'black', label: '⚫ Negro', color: '#424242' }
+              { value: 'yellow', label: '🟡 Amarillo' },
+              { value: 'brown', label: '🟤 Marrón' },
+              { value: 'green', label: '🟢 Verde' },
+              { value: 'orange', label: '🟠 Naranja' },
+              { value: 'red', label: '🔴 Rojizo' },
+              { value: 'black', label: '⚫ Negro' },
+              { value: 'white', label: '⚪ Blanco' },
+              { value: 'dark_green', label: '🟢 Verde oscuro' }
             ].map(color => (
               <button
                 key={color.value}
@@ -312,10 +286,14 @@ const Home = () => {
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {[
-              { value: 'liquid', label: '💧 Líquida' },
-              { value: 'soft', label: '🧈 Blanda' },
-              { value: 'normal', label: '🥜 Normal' },
-              { value: 'hard', label: '🪨 Dura' }
+              { value: 'soft_seedy', label: '🌱 Suave con semillitas' },
+              { value: 'watery', label: '💧 Líquida/aguada' },
+              { value: 'pasty', label: '🥜 Pastosa' },
+              { value: 'firm_formed', label: '🥖 Firme y formada' },
+              { value: 'soft_formed', label: '🍞 Suave pero formada' },
+              { value: 'hard_pellets', label: '🔵 Bolitas duras' },
+              { value: 'very_watery', label: '🌊 Muy líquida' },
+              { value: 'mucousy', label: '🫧 Con mucosidad' }
             ].map(texture => (
               <button
                 key={texture.value}
@@ -336,7 +314,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Selector de Mocos */}
+        {/* Mocos */}
         <div style={{ marginBottom: '25px' }}>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <input
@@ -403,315 +381,206 @@ const Home = () => {
         )}
       </div>
 
+      {/* Errores */}
       {(localError || babyError) && (
-        <div style={{
-          background: '#fee',
-          color: '#c00',
-          padding: '15px',
-          borderRadius: '8px',
-          marginBottom: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <span>{localError || babyError}</span>
-          <button 
-            onClick={() => setLocalError('')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#c00',
-              cursor: 'pointer',
-              fontSize: '18px'
-            }}
-          >
-            ✕
-          </button>
+        <div className="home-error">
+          <p>{localError || babyError}</p>
+          <button onClick={() => setLocalError('')}>✕</button>
         </div>
       )}
 
       {currentBaby ? (
         <>
-          {/* Stats del día */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '25px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ margin: '0 0 15px 0', textAlign: 'center', color: '#007bff' }}>
-              📊 Resumen de Hoy
-            </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '15px'
-            }}>
-              <div style={{
-                textAlign: 'center',
-                padding: '15px 10px',
-                background: '#f8f9fa',
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '1.8rem' }}>🍼</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#007bff' }}>
-                  {todayStats.feedingCount}
-                </div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>Tomas</div>
+          {/* Estadísticas del día */}
+          <div className="today-stats">
+            <h3>📊 Resumen de Hoy</h3>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-emoji">🍼</div>
+                <div className="stat-number">{todayStats.feedingCount}</div>
+                <div className="stat-label">Tomas</div>
               </div>
-              <div style={{
-                textAlign: 'center',
-                padding: '15px 10px',
-                background: '#f8f9fa',
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '1.8rem' }}>😴</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#007bff' }}>
-                  {formatDuration(todayStats.sleepDuration)}
-                </div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>Sueño</div>
+              
+              <div className="stat-card">
+                <div className="stat-emoji">😴</div>
+                <div className="stat-number">{formatDuration(todayStats.sleepDuration)}</div>
+                <div className="stat-label">Sueño</div>
               </div>
-              <div style={{
-                textAlign: 'center',
-                padding: '15px 10px',
-                background: '#f8f9fa',
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '1.8rem' }}>💩</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#007bff' }}>
-                  {todayStats.diaperCount.total}
-                </div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>Pañales</div>
+              
+              <div className="stat-card">
+                <div className="stat-emoji">🔄</div>
+                <div className="stat-number">{todayStats.diaperCount.total}</div>
+                <div className="stat-label">Pañales</div>
               </div>
+            </div>
+
+            <div className="diaper-stats-summary">
+              <span>💧 {todayStats.diaperCount.wet + todayStats.diaperCount.mixed} mojados</span>
+              <span>💩 {todayStats.diaperCount.dirty + todayStats.diaperCount.mixed} con caca</span>
             </div>
           </div>
 
-          {/* Acciones principales */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '25px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#007bff' }}>
-              ⚡ Acciones Rápidas
-            </h3>
-            
-            {/* Alimentación */}
-            <div style={{ marginBottom: '25px' }}>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>🍼 Alimentación</h4>
-              {currentFeedingSession ? (
-                <div style={{
-                  background: '#e8f5e8',
-                  border: '2px solid #4caf50',
-                  borderRadius: '8px',
-                  padding: '15px',
-                  textAlign: 'center'
-                }}>
-                  <p style={{ margin: '0 0 8px 0', color: '#2e7d32', fontWeight: '500' }}>
-                    Sesión activa: {currentFeedingSession.type} 
-                    {currentFeedingSession.breast && ` (${currentFeedingSession.breast})`}
-                  </p>
+          {/* Sesiones activas CON TIMER */}
+          {(currentFeedingSession || currentSleepSession) && (
+            <div className="active-session">
+              <h3>🔄 Sesiones Activas</h3>
+              
+              {currentFeedingSession && (
+                <div className="feeding-session-active">
+                  <p>🍼 Alimentando con pecho <strong>{currentFeedingSession.breast === 'left' ? 'izquierdo' : 'derecho'}</strong></p>
+                  <p className="session-timer">{formatTimer(feedingElapsedTime)}</p>
                   <button 
-                    onClick={() => handleFeedingAction()}
-                    style={{
-                      background: '#f44336',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '12px 20px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}
+                    className="end-session-btn"
+                    onClick={() => handleFeedingAction('breastfeeding', currentFeedingSession.breast)}
                   >
-                    ⏹️ Terminar Sesión
+                    ⏹️ Terminar Alimentación
                   </button>
                 </div>
+              )}
+              
+              {currentSleepSession && (
+                <div className="sleep-session-active">
+                  <p>😴 Durmiendo</p>
+                  <p className="session-timer">{formatTimer(sleepElapsedTime)}</p>
+                  <button 
+                    className="end-session-btn"
+                    onClick={handleSleepAction}
+                  >
+                    ⏰ Despertar
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Acciones principales */}
+          <div className="main-actions">
+            
+            {/* Alimentación */}
+            <div className="action-section">
+              <h3>🍼 Alimentación</h3>
+              
+              {!currentFeedingSession ? (
+                <>
+                  {lastBreast && (
+                    <div className="feeding-suggestion">
+                      <p>💡 Última toma: pecho <strong>{lastBreast === 'left' ? 'izquierdo' : 'derecho'}</strong></p>
+                      <p>Se sugiere: <strong>{getSuggestedBreast() === 'left' ? 'izquierdo' : 'derecho'}</strong></p>
+                    </div>
+                  )}
+                  
+                  <div className="feeding-buttons">
+                    <button 
+                      className={`feeding-btn left ${getSuggestedBreast() === 'left' ? 'suggested' : ''}`}
+                      onClick={() => handleFeedingAction('breastfeeding', 'left')}
+                    >
+                      🤱 Izquierdo
+                      {getSuggestedBreast() === 'left' && <span className="suggested-text">Sugerido</span>}
+                    </button>
+                    
+                    <button 
+                      className={`feeding-btn right ${getSuggestedBreast() === 'right' ? 'suggested' : ''}`}
+                      onClick={() => handleFeedingAction('breastfeeding', 'right')}
+                    >
+                      🤱 Derecho
+                      {getSuggestedBreast() === 'right' && <span className="suggested-text">Sugerido</span>}
+                    </button>
+                  </div>
+                </>
               ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '10px'
-                }}>
-                  <button 
-                    onClick={() => handleFeedingAction('breastfeeding', 'left')}
-                    style={{
-                      padding: '15px 12px',
-                      border: '2px solid #ff9800',
-                      borderRadius: '8px',
-                      background: 'white',
-                      color: '#ff9800',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}
-                  >
-                    ← Pecho Izquierdo
-                  </button>
-                  <button 
-                    onClick={() => handleFeedingAction('breastfeeding', 'right')}
-                    style={{
-                      padding: '15px 12px',
-                      border: '2px solid #9c27b0',
-                      borderRadius: '8px',
-                      background: 'white',
-                      color: '#9c27b0',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}
-                  >
-                    Pecho Derecho →
-                  </button>
+                <div className="feeding-active-info">
+                  <p>✅ Sesión en curso - Ve arriba para terminarla</p>
                 </div>
               )}
             </div>
 
             {/* Sueño */}
-            <div style={{ marginBottom: '25px' }}>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>😴 Sueño</h4>
-              {currentSleepSession ? (
-                <div style={{
-                  background: '#e8f5e8',
-                  border: '2px solid #4caf50',
-                  borderRadius: '8px',
-                  padding: '15px',
-                  textAlign: 'center'
-                }}>
-                  <p style={{ margin: '0 0 8px 0', color: '#2e7d32', fontWeight: '500' }}>
-                    Durmiendo...
-                  </p>
-                  <button 
-                    onClick={handleSleepAction}
-                    style={{
-                      background: '#f44336',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '12px 20px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}
-                  >
-                    ⏰ Despertar
-                  </button>
-                </div>
-              ) : (
+            <div className="action-section">
+              <h3>😴 Sueño</h3>
+              {!currentSleepSession ? (
                 <button 
+                  className="sleep-btn"
                   onClick={handleSleepAction}
-                  style={{
-                    width: '100%',
-                    padding: '15px',
-                    background: '#673ab7',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: '500'
-                  }}
                 >
-                  😴 Empezar Sueño
+                  😴 Empezar a Dormir
                 </button>
+              ) : (
+                <div className="feeding-active-info">
+                  <p>✅ Durmiendo - Ve arriba para despertar</p>
+                </div>
               )}
             </div>
 
             {/* Pañales */}
-            <div>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>💩 Pañales</h4>
+            <div className="action-section">
+              <h3>🔄 Pañales</h3>
               <button 
+                className="diaper-btn"
                 onClick={() => setShowQuickActions(true)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  background: '#795548',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '500',
-                  marginBottom: '10px'
-                }}
               >
-                📝 Registrar Cambio
+                📝 Registrar Pañal
               </button>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '0.85rem',
-                color: '#666'
-              }}>
-                <span>Hoy: {todayStats.diaperCount.total} cambios</span>
-                <span>(💧{todayStats.diaperCount.wet} 💩{todayStats.diaperCount.dirty})</span>
-              </div>
             </div>
           </div>
 
-          {/* Enlaces de navegación */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px',
-            marginBottom: '20px'
-          }}>
-            <Link 
-              to="/night-mode" 
-              style={{
-                padding: '15px',
-                textAlign: 'center',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                background: '#37474f',
-                color: 'white',
-                fontWeight: '500'
-              }}
-            >
+          {/* Enlaces navegación MÁS PEQUEÑOS */}
+          <div className="navigation-links">
+            <Link to="/night-mode" className="nav-link night-mode">
               🌙 Modo Noche
             </Link>
-            <Link 
-              to="/stats" 
-              style={{
-                padding: '15px',
-                textAlign: 'center',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                background: '#4caf50',
-                color: 'white',
-                fontWeight: '500'
-              }}
-            >
+            <Link to="/stats" className="nav-link stats">
               📊 Estadísticas
             </Link>
           </div>
         </>
       ) : (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px 20px',
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <p style={{ marginBottom: '20px', color: '#666', fontSize: '1.1rem' }}>
-            🤔 No hay ningún bebé seleccionado
-          </p>
-          <Link 
-            to="/settings" 
-            style={{
-              display: 'inline-block',
-              padding: '12px 24px',
-              background: '#007bff',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: '500'
-            }}
-          >
+        <div className="no-baby-selected">
+          <p>🤔 No hay ningún bebé seleccionado</p>
+          <Link to="/settings" className="setup-link">
             Configurar bebé
           </Link>
         </div>
       )}
 
-      {showQuickActions && <QuickActions />}
+      {/* Modal pañales */}
+      {showQuickActions && (
+        <div className="quick-actions-modal">
+          <div className="quick-actions-content">
+            <h3>🔄 Tipo de Pañal</h3>
+            
+            <div className="quick-actions-buttons">
+              <button 
+                className="wet-button"
+                onClick={() => handleDiaperAction('wet')}
+              >
+                💧 Solo Mojado
+              </button>
+              
+              <button 
+                className="dirty-button"
+                onClick={() => handleDiaperAction('dirty')}
+              >
+                💩 Solo Caca
+              </button>
+              
+              <button 
+                className="mixed-button"
+                onClick={() => handleDiaperAction('mixed')}
+              >
+                💧💩 Ambos
+              </button>
+            </div>
+            
+            <button 
+              className="cancel-button"
+              onClick={() => setShowQuickActions(false)}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       {showStoolDetails && <StoolDetailsModal />}
     </div>
   );

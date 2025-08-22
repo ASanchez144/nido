@@ -52,17 +52,12 @@ export const TrackingProvider = ({ children }) => {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
   
-      console.log('Cargando datos para:', currentBaby.id, 'desde:', today.toISOString());
-  
-      // Usar los nombres EXACTOS de tus tablas
       const { data: feedingSessions, error: feedError } = await supabase
         .from('feeding_sessions')
         .select('*')
         .eq('baby_id', currentBaby.id)
         .gte('start_time', today.toISOString())
         .lt('start_time', tomorrow.toISOString());
-  
-      console.log('Feeding sessions cargadas:', feedingSessions);
   
       const { data: sleepSessions, error: sleepError } = await supabase
         .from('sleep_sessions')
@@ -225,7 +220,7 @@ export const TrackingProvider = ({ children }) => {
     }
   };
 
-  const addDiaperEvent = async (type) => {
+  const addDiaperEvent = async (type, stoolDetails = null) => {
     if (!currentBaby || !user) throw new Error('Bebé o usuario no disponible');
 
     try {
@@ -235,6 +230,13 @@ export const TrackingProvider = ({ children }) => {
         type: type,
         timestamp: new Date().toISOString()
       };
+
+      // Añadir detalles de caca si se proporcionan
+      if (stoolDetails && (type === 'dirty' || type === 'mixed')) {
+        if (stoolDetails.color) eventData.stool_color = stoolDetails.color;
+        if (stoolDetails.texture) eventData.stool_texture = stoolDetails.texture;
+        if (stoolDetails.hasMucus !== undefined) eventData.has_mucus = stoolDetails.hasMucus;
+      }
 
       const { data, error } = await supabase
         .from('diaper_events')
@@ -254,7 +256,6 @@ export const TrackingProvider = ({ children }) => {
   };
 
   const getTodayStats = () => {
-    // Contar TODAS las sesiones de alimentación del día, no solo las terminadas
     const feedingCount = todayData.feedingSessions.length;
     
     const sleepDuration = todayData.sleepSessions
@@ -271,8 +272,6 @@ export const TrackingProvider = ({ children }) => {
       dirty: todayData.diaperEvents.filter(e => e.type === 'dirty').length,
       mixed: todayData.diaperEvents.filter(e => e.type === 'mixed').length
     };
-  
-    console.log('Stats calculadas:', { feedingCount, sleepDuration, diaperCount, todayData });
   
     return {
       feedingCount,

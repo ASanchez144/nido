@@ -14,6 +14,7 @@ import NightMode from './pages/NightMode';
 import Stats from './pages/Stats';
 import Settings from './pages/Settings';
 import Caregivers from './pages/Caregivers';
+import JoinBaby from './pages/JoinBaby'; // NUEVO
 import './App.css';
 
 function App() {
