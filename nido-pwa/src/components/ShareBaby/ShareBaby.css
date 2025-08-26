@@ -1,41 +1,8 @@
-/* src/pages/Caregivers.css */
-.caregivers-page {
+/* src/components/ShareBaby/ShareBaby.css */
+.share-baby {
   padding: 1rem;
-  max-width: 800px;
+  max-width: 600px;
   margin: 0 auto;
-}
-
-.caregivers-page h1 {
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.baby-info {
-  background-color: #f5f5f5;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-  border-left: 4px solid #4caf50;
-}
-
-.error-message {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 4px;
-  border-left: 4px solid #c62828;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.error-message button {
-  background-color: transparent;
-  border: none;
-  color: #c62828;
-  cursor: pointer;
-  font-weight: bold;
 }
 
 .share-form {
@@ -87,9 +54,6 @@
   text-align: center;
   color: #f44336;
   padding: 2rem;
-  background-color: #ffebee;
-  border-radius: 8px;
-  margin: 2rem 0;
 }
 
 .caregivers-list {
@@ -165,7 +129,7 @@
   margin: 2rem 0;
 }
 
-.share-link-container h3 {
+.qr-container h3 {
   margin-bottom: 1rem;
 }
 
@@ -181,13 +145,9 @@
   width: 100%;
 }
 
-.link-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .copy-button, 
 .close-button {
+  margin-top: 0.5rem;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
@@ -198,26 +158,10 @@
 .copy-button {
   background-color: #2196f3;
   color: white;
+  margin-right: 0.5rem;
 }
 
 .close-button {
   background-color: #757575;
   color: white;
-}
-
-/* Estilos responsivos */
-@media (max-width: 768px) {
-  .caregiver-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .caregiver-info {
-    margin-bottom: 0.5rem;
-  }
-  
-  .caregiver-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
 }

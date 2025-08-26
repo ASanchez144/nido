@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    // Verificar sesión inicial
+    // Verificar sesión inicial (una sola vez)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (mounted) {
         setUser(session?.user ?? null);
@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
       }
     });
 
-    // Listener para cambios de auth
+    // Listener para cambios de auth (una sola suscripción)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (mounted) {
@@ -38,6 +38,16 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Procesar invitación pendiente cuando exista usuario
+  useEffect(() => {
+    if (!user) return;
+    const pendingInvite = localStorage.getItem('pendingInvite');
+    if (pendingInvite) {
+      localStorage.removeItem('pendingInvite');
+      window.location.href = `/join/${pendingInvite}`;
+    }
+  }, [user]);
 
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({

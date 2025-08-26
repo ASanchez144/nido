@@ -34,11 +34,12 @@ const Home = () => {
   const [sleepElapsedTime, setSleepElapsedTime] = useState(0);
   const [lastBreast, setLastBreast] = useState('');
 
-  // Stats del día
+  // Stats del día (alineado con TrackingContext.getTodayStats)
   const todayStats = currentBaby ? getTodayStats() : {
-    feedingCount: 0,
-    sleepDuration: 0,
-    diaperCount: { total: 0, wet: 0, dirty: 0, mixed: 0 }
+    feeding: { total: 0, completed: 0, active: false },
+    sleep: { total: 0, completed: 0, totalTimeMs: 0, totalTimeFormatted: '0m', active: false },
+    diaper: { total: 0, wet: 0, dirty: 0, mixed: 0 },
+    weight: { entries: 0, latest: null }
   };
 
   // Cargar último pecho
@@ -397,26 +398,26 @@ const Home = () => {
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-emoji">🍼</div>
-                <div className="stat-number">{todayStats.feedingCount}</div>
+                <div className="stat-number">{todayStats.feeding?.total || 0}</div>
                 <div className="stat-label">Tomas</div>
               </div>
               
               <div className="stat-card">
                 <div className="stat-emoji">😴</div>
-                <div className="stat-number">{formatDuration(todayStats.sleepDuration)}</div>
+                <div className="stat-number">{formatDuration(todayStats.sleep?.totalTimeMs || 0)}</div>
                 <div className="stat-label">Sueño</div>
               </div>
               
               <div className="stat-card">
                 <div className="stat-emoji">🔄</div>
-                <div className="stat-number">{todayStats.diaperCount.total}</div>
+                <div className="stat-number">{todayStats.diaper?.total || 0}</div>
                 <div className="stat-label">Pañales</div>
               </div>
             </div>
 
             <div className="diaper-stats-summary">
-              <span>💧 {todayStats.diaperCount.wet + todayStats.diaperCount.mixed} mojados</span>
-              <span>💩 {todayStats.diaperCount.dirty + todayStats.diaperCount.mixed} con caca</span>
+              <span>💧 {(todayStats.diaper?.wet || 0) + (todayStats.diaper?.mixed || 0)} mojados</span>
+              <span>💩 {(todayStats.diaper?.dirty || 0) + (todayStats.diaper?.mixed || 0)} con caca</span>
             </div>
           </div>
 
