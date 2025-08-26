@@ -398,14 +398,50 @@
   transform: scale(0.98);
 }
 
-.nav-link.night-mode {
-  background: #37474f;
-  color: white;
+/* Estilos para los botones de Modo Noche y Estadísticas */
+.home-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
 }
 
-.nav-link.stats {
-  background: #4caf50;
+/* Botón de Modo Noche */
+.home-buttons a[href="/night-mode"] {
+  background-color: #344955;
   color: white;
+  width: 120px;
+  height: 44px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Botón de Estadísticas */
+.home-buttons a[href="/stats"] {
+  background-color: #4CAF50;
+  color: white;
+  width: 120px;
+  height: 44px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Efecto hover */
+.home-buttons a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* No baby selected */

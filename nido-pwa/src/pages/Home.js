@@ -525,11 +525,12 @@ const Home = () => {
           </div>
 
           {/* Enlaces navegación MÁS PEQUEÑOS */}
-          <div className="navigation-links">
-            <Link to="/night-mode" className="nav-link night-mode">
+          <div className="home-buttons">
+            <Link to="/night-mode" className="home-button night-mode-button">
               🌙 Modo Noche
             </Link>
-            <Link to="/stats" className="nav-link stats">
+            
+            <Link to="/stats" className="home-button stats-button">
               📊 Estadísticas
             </Link>
           </div>
