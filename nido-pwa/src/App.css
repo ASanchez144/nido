@@ -1,15 +1,84 @@
-/* src/App.css */
+/* Añadir esto al inicio de App.css para controlar el modo oscuro a nivel global */
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #1a1a1a;
+  --card-bg: #ffffff;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --border-color: #e2e8f0;
+  --primary-color: #4361ee;
+  --secondary-color: #6366f1;
+  --success-color: #16a34a;
+  --info-color: #0ea5e9;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+}
+
+/* Aplicar estilos oscuros cuando el body tiene la clase dark-mode */
+body.dark-mode {
+  --bg-color: #0f172a;
+  --text-color: #f8fafc;
+  --card-bg: #1e293b;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --border-color: #334155;
+  --primary-color: #818cf8;
+  --secondary-color: #a5b4fc;
+  --success-color: #22c55e;
+  --info-color: #38bdf8;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+}
+
+/* Aplicar los colores base a todo el documento */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: var(--bg-color);
 }
 
+/* Resto de tu CSS de App.css aquí */
 .main-content {
   flex: 1;
-  padding: 16px;
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
-  padding-bottom: 70px; /* Espacio para la navbar */
+  padding-top: 60px;
+  padding-bottom: 60px;
+  background-color: var(--bg-color);
+}
+
+/* Estilos para forms y inputs */
+input, select, textarea {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary-color);
+  outline-color: var(--primary-color);
+}
+
+/* Asegúrate de que los modales y popups también respeten el tema */
+.modal, .popup, .dialog {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+/* Cuando haya imágenes que deban invertirse en modo oscuro */
+.invert-in-dark-mode {
+  filter: none;
+}
+
+body.dark-mode .invert-in-dark-mode {
+  filter: invert(1) hue-rotate(180deg);
 }

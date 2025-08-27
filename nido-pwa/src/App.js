@@ -1,9 +1,10 @@
-// src/App.js
+// src/App.js - Con ThemeProvider añadido
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { BabyProvider } from './contexts/BabyContext'; 
 import { TrackingProvider } from './contexts/TrackingContext';
+import { ThemeProvider } from './contexts/ThemeContext'; // Importar ThemeProvider
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Header from './components/layout/Header';
 import NavBar from './components/layout/NavBar';
@@ -58,62 +59,64 @@ function App() {
   return (
     <AuthProvider>
       <BabyProvider>
-        <Router>
-          {maintenanceMode ? (
-            // Modo mantenimiento con Router
-            <div className="app">
-              <Header />
-              <main className="main-content">
-                <MaintenancePage />
-              </main>
-              <NavBar />
-            </div>
-          ) : (
-            // Aplicación normal
-            <TrackingProvider>
+        <ThemeProvider> {/* Envolver toda la aplicación con ThemeProvider */}
+          <Router>
+            {maintenanceMode ? (
+              // Modo mantenimiento con Router
               <div className="app">
                 <Header />
-                
                 <main className="main-content">
-                  <Routes>
-                    {/* Rutas públicas */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/join/:code" element={<JoinBaby />} />
-                    {/* Rutas protegidas */}
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <Home />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/night-mode" element={
-                      <ProtectedRoute>
-                        <NightMode />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/stats" element={
-                      <ProtectedRoute>
-                        <Stats />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/settings" element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/caregivers" element={
-                      <ProtectedRoute>
-                        <Caregivers />
-                      </ProtectedRoute>
-                    } />
-                  </Routes>
+                  <MaintenancePage />
                 </main>
-                
                 <NavBar />
               </div>
-            </TrackingProvider>
-          )}
-        </Router>
+            ) : (
+              // Aplicación normal
+              <TrackingProvider>
+                <div className="app">
+                  <Header />
+                  
+                  <main className="main-content">
+                    <Routes>
+                      {/* Rutas públicas */}
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/join/:code" element={<JoinBaby />} />
+                      {/* Rutas protegidas */}
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <Home />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/night-mode" element={
+                        <ProtectedRoute>
+                          <NightMode />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/stats" element={
+                        <ProtectedRoute>
+                          <Stats />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/settings" element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/caregivers" element={
+                        <ProtectedRoute>
+                          <Caregivers />
+                        </ProtectedRoute>
+                      } />
+                    </Routes>
+                  </main>
+                  
+                  <NavBar />
+                </div>
+              </TrackingProvider>
+            )}
+          </Router>
+        </ThemeProvider>
       </BabyProvider>
     </AuthProvider>
   );

@@ -1,332 +1,723 @@
-/* src/pages/Stats.css */
+/* src/pages/Stats.css - Versión moderna 2025 */
 .stats-page {
+  padding: 24px;
+  padding-bottom: 90px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.stats-page h2 {
+  margin-bottom: 24px;
+  color: #4361ee;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.8rem;
+  letter-spacing: -0.5px;
+}
+
+.stats-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4361ee, #7209b7);
+  opacity: 0.7;
+}
+
+.stats-card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #4361ee;
+  font-weight: 600;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stats-card h3::before {
+  content: "⬤";
+  font-size: 0.5rem;
+  color: #4361ee;
+}
+
+.progress-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.progress-item {
+  margin-bottom: 10px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.progress-label .value {
+  font-weight: 600;
+  color: #4361ee;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 8px;
+  position: relative;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.progress-fill.left-breast {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.progress-fill.right-breast {
+  background: linear-gradient(90deg, #ec4899, #db2777);
+}
+
+.progress-fill.both-breasts {
+  background: linear-gradient(90deg, #8b5cf6, #6d28d9);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  text-align: center;
+}
+
+.stat-item {
+  padding: 16px;
+  background-color: #f8faff;
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.stat-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.12);
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #4361ee;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.diaper-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.diaper-stat {
+  text-align: center;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.diaper-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.diaper-stat.wet {
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+}
+
+.diaper-stat.dirty {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.diaper-stat.total {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+}
+
+.diaper-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.diaper-stat.wet .diaper-value {
+  color: #0284c7;
+}
+
+.diaper-stat.dirty .diaper-value {
+  color: #d97706;
+}
+
+.diaper-stat.total .diaper-value {
+  color: #16a34a;
+}
+
+.diaper-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.diaper-stat.wet .diaper-label {
+  color: #0369a1;
+}
+
+.diaper-stat.dirty .diaper-label {
+  color: #b45309;
+}
+
+.diaper-stat.total .diaper-label {
+  color: #15803d;
+}
+
+.last-poop {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #64748b;
+  background-color: #f8faff;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+/* NUEVOS ESTILOS PARA SECCIÓN DE CACAS */
+
+/* Resumen de estadísticas de caca */
+.stool-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stool-stat {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border-radius: 12px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.stool-stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ea580c, #c2410c);
+  opacity: 0.7;
+}
+
+.stool-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(194, 65, 12, 0.1);
+}
+
+.stool-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #c2410c;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.stool-label {
+  font-size: 0.85rem;
+  color: #9a3412;
+  font-weight: 500;
+}
+
+/* Detalles de características */
+.stool-details {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.stool-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.stool-detail-item:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #334155;
+  background-color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Último evento detallado */
+.last-stool-event {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.last-stool-event::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  bottom: 0;
+  background: linear-gradient(180deg, #10b981, #059669);
+  opacity: 0.7;
+}
+
+.last-stool-event h4 {
+  margin: 0 0 16px 0;
+  color: #047857;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-time {
+  font-weight: 600;
+  color: #065f46;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.event-characteristics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.characteristic {
+  background-color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #047857;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s;
+}
+
+.characteristic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.characteristic.mucus {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.characteristic.mucus:hover {
+  box-shadow: 0 4px 8px rgba(180, 83, 9, 0.1);
+}
+
+/* Sin datos de caca */
+.no-stool-data {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+}
+
+.no-stool-data p {
+  margin-bottom: 10px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.no-stool-data .hint {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body.dark-mode .stats-page {
+    color: #f1f5f9;
+  }
+  
+  body.dark-mode .stats-card {
+    background-color: #1e293b;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  body.dark-mode .stats-card h3 {
+    color: #818cf8;
+  }
+  
+  body.dark-mode .stats-card h3::before {
+    color: #818cf8;
+  }
+  
+  body.dark-mode .progress-bar {
+    background-color: #334155;
+  }
+  
+  body.dark-mode .progress-label .value {
+    color: #818cf8;
+  }
+  
+  body.dark-mode .stat-item {
+    background-color: #334155;
+  }
+  
+  body.dark-mode .stat-value {
+    color: #818cf8;
+  }
+  
+  body.dark-mode .stat-label {
+    color: #cbd5e1;
+  }
+  
+  body.dark-mode .diaper-stat.wet {
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+  }
+  
+  body.dark-mode .diaper-stat.dirty {
+    background: linear-gradient(135deg, #713f12, #854d0e);
+  }
+  
+  body.dark-mode .diaper-stat.total {
+    background: linear-gradient(135deg, #14532d, #166534);
+  }
+  
+  body.dark-mode .diaper-stat.wet .diaper-value,
+  body.dark-mode .diaper-stat.wet .diaper-label {
+    color: #bfdbfe;
+  }
+  
+  body.dark-mode .diaper-stat.dirty .diaper-value,
+  body.dark-mode .diaper-stat.dirty .diaper-label {
+    color: #fde68a;
+  }
+  
+  body.dark-mode .diaper-stat.total .diaper-value,
+  body.dark-mode .diaper-stat.total .diaper-label {
+    color: #bbf7d0;
+  }
+  
+  body.dark-mode .last-poop {
+    background-color: #334155;
+    color: #cbd5e1;
+  }
+  
+  body.dark-mode .stool-stat {
+    background: linear-gradient(135deg, #7c2d12, #9a3412);
+  }
+  
+  body.dark-mode .stool-stat::before {
+    background: linear-gradient(90deg, #fdba74, #fb923c);
+  }
+  
+  body.dark-mode .stool-value {
+    color: #fdba74;
+  }
+  
+  body.dark-mode .stool-label {
+    color: #fed7aa;
+  }
+  
+  body.dark-mode .stool-details {
+    background: linear-gradient(135deg, #1e293b, #334155);
+  }
+  
+  body.dark-mode .stool-detail-item {
+    border-bottom-color: #475569;
+  }
+  
+  body.dark-mode .detail-label {
+    color: #cbd5e1;
+  }
+  
+  body.dark-mode .detail-value {
+    background-color: #475569;
+    color: #f1f5f9;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  body.dark-mode .last-stool-event {
+    background: linear-gradient(135deg, #064e3b, #065f46);
+  }
+  
+  body.dark-mode .last-stool-event::before {
+    background: linear-gradient(180deg, #34d399, #10b981);
+  }
+  
+  body.dark-mode .last-stool-event h4 {
+    color: #a7f3d0;
+  }
+  
+  body.dark-mode .event-time {
+    color: #d1fae5;
+    background: rgba(6, 78, 59, 0.6);
+  }
+  
+  body.dark-mode .characteristic {
+    background-color: #065f46;
+    color: #a7f3d0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  body.dark-mode .characteristic.mucus {
+    background-color: #92400e;
+    color: #fef3c7;
+  }
+  
+  body.dark-mode .no-stool-data {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    border-color: #475569;
+  }
+  
+  body.dark-mode .no-stool-data p {
+    color: #cbd5e1;
+  }
+  
+  body.dark-mode .no-stool-data .hint {
+    color: #94a3b8;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .stats-page {
     padding: 20px;
+    padding-bottom: 80px;
+  }
+  
+  .stats-page h2 {
+    font-size: 1.6rem;
+  }
+  
+  .stats-card {
+    padding: 20px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .diaper-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .stool-summary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .progress-bars {
+    gap: 12px;
+  }
+  
+  .stool-detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .detail-value {
+    width: 100%;
+  }
+  
+  .event-characteristics {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-page {
+    padding: 16px;
     padding-bottom: 70px;
   }
   
   .stats-page h2 {
+    font-size: 1.4rem;
     margin-bottom: 20px;
-    color: var(--primary-color);
-    text-align: center;
   }
   
   .stats-card {
-    background-color: white;
-    border-radius: var(--border-radius);
-    padding: 20px;
+    padding: 16px;
     margin-bottom: 20px;
-    box-shadow: var(--box-shadow);
   }
   
   .stats-card h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: var(--primary-color);
+    font-size: 1.1rem;
   }
   
-  .progress-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .stool-summary {
+    margin-bottom: 16px;
   }
   
-  .progress-item {
-    margin-bottom: 5px;
+  .stool-stat {
+    padding: 12px;
+  }
+  
+  .stool-value {
+    font-size: 1.4rem;
+  }
+  
+  .stool-label {
+    font-size: 0.8rem;
+  }
+  
+  .last-stool-event {
+    padding: 16px;
+  }
+  
+  .characteristic {
+    font-size: 0.8rem;
+    padding: 5px 10px;
   }
   
   .progress-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
     font-size: 0.9rem;
   }
   
   .progress-bar {
     height: 8px;
-    background-color: #f2f2f2;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  
-  .progress-fill {
-    height: 100%;
-    border-radius: 4px;
-  }
-  
-  .progress-fill.left-breast {
-    background-color: #007bff;
-  }
-  
-  .progress-fill.right-breast {
-    background-color: #ff6b6b;
-  }
-  
-  .progress-fill.both-breasts {
-    background-color: #20c997;
-  }
-  
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    text-align: center;
-  }
-  
-  .stat-item {
-    padding: 10px;
   }
   
   .stat-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: var(--primary-color);
+    font-size: 1.6rem;
   }
   
   .stat-label {
     font-size: 0.85rem;
-    color: #666;
-  }
-  
-  .diaper-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-  
-  .diaper-stat {
-    text-align: center;
-    padding: 10px;
-    border-radius: var(--border-radius);
-  }
-  
-  .diaper-stat.wet {
-    background-color: #e3f2fd;
-  }
-  
-  .diaper-stat.dirty {
-    background-color: #fff3e0;
-  }
-  
-  .diaper-stat.total {
-    background-color: #e8f5e9;
   }
   
   .diaper-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
+    font-size: 1.6rem;
   }
   
   .diaper-label {
-    font-size: 0.8rem;
-  }
-  
-  .last-poop {
-    text-align: center;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  /* NUEVOS ESTILOS PARA SECCIÓN DE CACAS */
-  
-  /* Resumen de estadísticas de caca */
-  .stool-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .stool-stat {
-    text-align: center;
-    padding: 12px;
-    background-color: #fff3e0;
-    border-radius: var(--border-radius);
-    border: 1px solid #ffcc80;
-  }
-  
-  .stool-value {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #e65100;
-    margin-bottom: 4px;
-  }
-  
-  .stool-label {
-    font-size: 0.8rem;
-    color: #bf360c;
-  }
-  
-  /* Detalles de características */
-  .stool-details {
-    background-color: #f8f9fa;
-    border-radius: var(--border-radius);
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-  
-  .stool-detail-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid #e9ecef;
-  }
-  
-  .stool-detail-item:last-child {
-    margin-bottom: 0;
-    border-bottom: none;
-  }
-  
-  .detail-label {
-    font-weight: 500;
-    color: #666;
-    font-size: 0.9rem;
-  }
-  
-  .detail-value {
-    font-weight: 600;
-    color: #333;
-    background-color: #fff;
-    padding: 4px 8px;
-    border-radius: 4px;
     font-size: 0.85rem;
   }
-  
-  /* Último evento detallado */
-  .last-stool-event {
-    background-color: #e8f5e9;
-    border-radius: var(--border-radius);
-    padding: 15px;
-    border-left: 4px solid #4caf50;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stats-card {
+  animation: fadeIn 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.stats-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stats-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.stats-card:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Mejoras para accesibilidad */
+.progress-bar {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-card,
+  .progress-fill,
+  .stat-item:hover,
+  .diaper-stat:hover,
+  .stool-stat:hover,
+  .characteristic:hover {
+    animation: none;
+    transition: none;
+    transform: none;
   }
-  
-  .last-stool-event h4 {
-    margin: 0 0 10px 0;
-    color: #2e7d32;
-    font-size: 1rem;
-  }
-  
-  .event-details {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .event-time {
-    font-weight: 600;
-    color: #1b5e20;
-    font-size: 0.9rem;
-  }
-  
-  .event-characteristics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  .characteristic {
-    background-color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    border: 1px solid #c8e6c9;
-    color: #2e7d32;
-  }
-  
-  .characteristic.mucus {
-    background-color: #fff3e0;
-    border-color: #ffcc80;
-    color: #f57c00;
-  }
-  
-  /* Sin datos de caca */
-  .no-stool-data {
-    text-align: center;
-    padding: 30px 20px;
-    background-color: #f8f9fa;
-    border-radius: var(--border-radius);
-    border: 2px dashed #dee2e6;
-  }
-  
-  .no-stool-data p {
-    margin-bottom: 8px;
-    color: #666;
-  }
-  
-  .no-stool-data .hint {
-    font-size: 0.85rem;
-    color: #999;
-    font-style: italic;
-  }
-  
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .stats-page {
-      padding: 15px;
-      padding-bottom: 60px;
-    }
-    
-    .stats-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    
-    .diaper-stats {
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-    
-    .stool-summary {
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-    
-    .progress-bars {
-      gap: 8px;
-    }
-    
-    .stool-detail-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-    
-    .event-characteristics {
-      justify-content: flex-start;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .stats-card {
-      padding: 15px;
-    }
-    
-    .stool-summary {
-      margin-bottom: 15px;
-    }
-    
-    .stool-stat {
-      padding: 8px;
-    }
-    
-    .stool-value {
-      font-size: 1.1rem;
-    }
-    
-    .stool-label {
-      font-size: 0.75rem;
-    }
-    
-    .last-stool-event {
-      padding: 12px;
-    }
-    
-    .characteristic {
-      font-size: 0.75rem;
-      padding: 3px 6px;
-    }
-  }
+}

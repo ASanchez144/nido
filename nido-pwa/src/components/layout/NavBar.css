@@ -1,39 +1,169 @@
-/* src/components/layout/NavBar.css */
+/* src/components/layout/NavBar.css - Versión moderna 2025 */
 .navbar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    padding: 8px 0;
-    z-index: 1000;
-  }
-  
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #888;
-    padding: 8px 0;
-    width: 20%;
-    text-align: center;
-    transition: color 0.3s;
-  }
-  
-  .nav-item.active {
-    color: var(--primary-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
+  padding: 12px 0 16px;
+  z-index: 1000;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #64748b;
+  padding: 10px 0;
+  width: 20%;
+  text-align: center;
+  transition: all 0.3s;
+  position: relative;
+  border-radius: 12px;
+}
+
+.nav-item::before {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4361ee, #7209b7);
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: width 0.3s, opacity 0.3s;
+  border-radius: 4px;
+}
+
+.nav-item:hover {
+  color: #4361ee;
+  transform: translateY(-2px);
+}
+
+.nav-item.active {
+  color: #4361ee;
+  font-weight: 600;
+}
+
+.nav-item.active::before {
+  width: 24px;
+  opacity: 1;
+}
+
+.nav-icon {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+  transition: transform 0.3s;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.15);
+}
+
+.nav-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: opacity 0.3s;
+  opacity: 0.9;
+}
+
+.nav-item:hover .nav-text,
+.nav-item.active .nav-text {
+  opacity: 1;
+}
+
+/* Special styling for specific nav items */
+.nav-item[href="/"] .nav-icon {
+  color: #0ea5e9;
+}
+
+.nav-item[href="/night-mode"] .nav-icon {
+  color: #1e293b;
+}
+
+.nav-item[href="/stats"] .nav-icon {
+  color: #16a34a;
+}
+
+.nav-item[href="/caregivers"] .nav-icon {
+  color: #ec4899;
+}
+
+.nav-item[href="/settings"] .nav-icon {
+  color: #f59e0b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 380px) {
+  .navbar {
+    padding: 10px 0 14px;
   }
   
   .nav-icon {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     margin-bottom: 4px;
   }
   
   .nav-text {
-    font-size: 12px;
+    font-size: 0.7rem;
   }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body.dark-mode .navbar {
+    background-color: rgba(15, 23, 42, 0.95);
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.25);
+  }
+  
+  body.dark-mode .nav-item {
+    color: #94a3b8;
+  }
+  
+  body.dark-mode .nav-item:hover,
+  body.dark-mode .nav-item.active {
+    color: #818cf8;
+  }
+  
+  body.dark-mode .nav-item::before {
+    background: linear-gradient(90deg, #818cf8, #c084fc);
+  }
+}
+
+/* Accessibility focus styles */
+.nav-item:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.5);
+  border-radius: 12px;
+}
+
+/* Animation for page transitions */
+@keyframes navFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar {
+  animation: navFadeIn 0.4s ease-out;
+}
