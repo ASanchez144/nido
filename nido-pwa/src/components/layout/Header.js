@@ -47,7 +47,7 @@ const Header = () => {
     <header className="app-header">
       <div className="header-content">
         <Link to="/" className="logo">
-          🪺 Nido
+          🪺 Baby Habits
         </Link>
 
         <div className="header-actions">
@@ -77,7 +77,7 @@ const Header = () => {
                   ))}
                   <hr />
                   <Link 
-                    to="/settings" 
+                    to="/add-baby" 
                     className="baby-option add-baby"
                     onClick={() => setShowBabyMenu(false)}
                   >

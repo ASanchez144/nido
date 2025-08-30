@@ -1,4 +1,4 @@
-// src/contexts/AuthContext.js
+// src/contexts/AuthContext.js — con auto-canjeo de invitaciones por código
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import supabase from '../supabase/config';
 
@@ -8,52 +8,113 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+const getInviteCodeFromURL = () => {
+  try {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
+    // también aceptamos /join/:code
+    if (!code) {
+      const m = window.location.pathname.match(/^\/join\/([^/]+)/i);
+      if (m && m[1]) return m[1];
+    }
+    return code ? code.trim() : null;
+  } catch {
+    return null;
+  }
+};
+
+const stripCodeFromURL = () => {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    if (url.pathname.startsWith('/join/')) url.pathname = '/invite';
+    window.history.replaceState({}, '', url.toString());
+  } catch {}
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Sesión inicial + listener
   useEffect(() => {
     let mounted = true;
 
-    // Verificar sesión inicial (una sola vez)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
+      if (!mounted) return;
+      setSession(session ?? null);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
-    // Listener para cambios de auth (una sola suscripción)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (mounted) {
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
+      async (_event, session) => {
+        setSession(session ?? null);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
-  // Procesar invitación pendiente cuando exista usuario
+  // Si llega ?code=... (o /join/:code)
   useEffect(() => {
-    if (!user) return;
-    const pendingInvite = localStorage.getItem('pendingInvite');
-    if (pendingInvite) {
-      localStorage.removeItem('pendingInvite');
-      window.location.href = `/join/${pendingInvite}`;
+    const codeFromURL = getInviteCodeFromURL();
+    if (!codeFromURL) return;
+
+    localStorage.setItem('pendingInviteCode', codeFromURL);
+
+    if (!session || !user) {
+      // no hay sesión → manda a login
+      stripCodeFromURL();
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login');
+      }
+    } else {
+      // hay sesión → canjea ya
+      (async () => {
+        try {
+          await supabase.rpc('redeem_invitation_code', { p_code: codeFromURL });
+          localStorage.removeItem('pendingInviteCode');
+          stripCodeFromURL();
+          if (window.location.pathname.startsWith('/invite') || window.location.pathname.startsWith('/join')) {
+            window.location.replace('/');
+          }
+        } catch (e) {
+          console.error('[Auth] Error canjeando invitación desde URL:', e);
+          stripCodeFromURL();
+        }
+      })();
     }
-  }, [user]);
+  }, [session, user]);
+
+  // Tras login/registro: canjear código pendiente
+  useEffect(() => {
+    if (!session || !user) return;
+    const pending = localStorage.getItem('pendingInviteCode');
+    if (!pending) return;
+
+    (async () => {
+      try {
+        await supabase.rpc('redeem_invitation_code', { p_code: pending });
+      } catch (e) {
+        console.error('[Auth] Error canjeando invitación pendiente:', e);
+      } finally {
+        localStorage.removeItem('pendingInviteCode');
+        if (['/login', '/register'].includes(window.location.pathname)) {
+          window.location.replace('/');
+        }
+      }
+    })();
+  }, [session, user]);
 
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
   };
@@ -62,12 +123,7 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName
-        }
-      }
+      options: { data: { first_name: firstName, last_name: lastName } }
     });
     if (error) throw error;
     return data;
@@ -78,17 +134,6 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   };
 
-  const value = {
-    user,
-    loading,
-    signIn,
-    signUp,
-    signOut
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = { user, session, loading, signIn, signUp, signOut };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

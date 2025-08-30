@@ -374,7 +374,7 @@ const Home = () => {
   return (
     <div className="home-page">
       <div className="home-header">
-        <h1>🪺 Nido</h1>
+        <h1>🪺 Baby Habits</h1>
         {currentBaby && (
           <p className="current-baby">
             Cuidando a <strong>{currentBaby.name}</strong>

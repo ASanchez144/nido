@@ -15,7 +15,9 @@ import NightMode from './pages/NightMode';
 import Stats from './pages/Stats';
 import Settings from './pages/Settings';
 import Caregivers from './pages/Caregivers';
+import AddBaby from './pages/AddBaby';
 import JoinBaby from './pages/JoinBaby';
+import InvitePage from './pages/InvitePage';
 import './App.css';
 
 // Componente de mantenimiento
@@ -81,7 +83,9 @@ function App() {
                       {/* Rutas públicas */}
                       <Route path="/login" element={<Login />} />
                       <Route path="/register" element={<Register />} />
-                      <Route path="/join/:code" element={<JoinBaby />} />
+                      {/* invitaciones */}
+                      <Route path="/invite" element={<InvitePage />} />
+                      <Route path="/join/:code" element={<InvitePage />} />
                       {/* Rutas protegidas */}
                       <Route path="/" element={
                         <ProtectedRoute>
@@ -106,6 +110,11 @@ function App() {
                       <Route path="/caregivers" element={
                         <ProtectedRoute>
                           <Caregivers />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/add-baby" element={
+                        <ProtectedRoute>
+                          <AddBaby />
                         </ProtectedRoute>
                       } />
                     </Routes>

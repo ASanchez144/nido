@@ -120,7 +120,7 @@ const JoinBaby = () => {
   return (
     <div className="join-page">
       <div className="join-container">
-        <div className="logo">🪺 Nido</div>
+        <div className="logo">🪺 Baby habits</div>
         
         {invitation && (
           <>

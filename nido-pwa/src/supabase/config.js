@@ -1,10 +1,28 @@
 // src/supabase/config.js
 import { createClient } from '@supabase/supabase-js';
 
-// Reemplaza estas variables con tus datos reales de Supabase
-const supabaseUrl = 'https://nzbakwpipctojwuyummg.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56YmFrd3BpcGN0b2p3dXl1bW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNjQyMjUsImV4cCI6MjA3MDc0MDIyNX0.ZugiWjt9IvdMPWntz4Ijhhhz76Iuua8896y9xR8REvU';
+// Leer variables de entorno
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey) {
+  console.error('[Supabase] Faltan variables de entorno.');
+  throw new Error('Configuración de Supabase incompleta');
+}
+
+if (process.env.NODE_ENV === 'development') {
+  console.log('[Supabase] Cliente configurado');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  global: {
+    headers: { 'X-Client-Info': 'nido-pwa' },
+  },
+});
 
 export default supabase;
+

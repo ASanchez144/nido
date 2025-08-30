@@ -55,7 +55,7 @@ const BabySetup = ({ onComplete }) => {
       margin: '0 auto'
     }}>
       <h1 style={{ color: '#007bff', marginBottom: '10px' }}>
-        🪺 ¡Bienvenido a Nido!
+        🪺 ¡Bienvenido a Baby habits!
       </h1>
       <p style={{ color: '#666', marginBottom: '30px' }}>
         Crea tu primer bebé para empezar
