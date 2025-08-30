@@ -1,0 +1,15 @@
+[build]
+  base    = "nido-pwa"
+  publish = "build"
+  command = "npm ci && npm run build"
+
+[build.environment]
+  # Si usas Supabase u otras vars en React, deben empezar por REACT_APP_
+  # REACT_APP_SUPABASE_URL = "https://xxx.supabase.co"
+  # REACT_APP_SUPABASE_ANON_KEY = "ey..."
+
+# SPA fallback para React Router
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200
