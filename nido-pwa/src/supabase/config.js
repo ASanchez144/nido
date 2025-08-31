@@ -2,19 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Leer variables de entorno
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   console.error('[Supabase] Faltan variables de entorno.');
+  console.error('URL:', supabaseUrl);
+  console.error('Key:', supabaseAnonKey ? '[CONFIGURADA]' : '[FALTA]');
   throw new Error('Configuración de Supabase incompleta');
 }
 
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   console.log('[Supabase] Cliente configurado');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -25,4 +27,3 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 export default supabase;
-
