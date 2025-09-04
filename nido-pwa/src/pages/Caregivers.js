@@ -1,189 +1,382 @@
 // src/pages/Caregivers.js
-import React, { useEffect, useState } from 'react';
-import supabase from '../supabase/config';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
 import { useBaby } from '../contexts/BabyContext';
+import { useAuth } from '../contexts/AuthContext';
+import supabase from '../supabase/config';
+import './Caregivers.css';
 
-export default function Caregivers() {
-  const { user } = useAuth();
-  const { currentBaby } = useBaby();
-
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('collaborator'); // 'admin' | 'collaborator' | 'viewer'
+const Caregivers = () => {
+  const { currentBaby } = useBaby() || {};
+  const { user } = useAuth() || {};
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [shareUrl, setShareUrl] = useState('');
+  const [caregivers, setCaregivers] = useState([]);
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('readonly');
+  const [showShareLink, setShowShareLink] = useState(false);
+  const [shareLink, setShareLink] = useState('');
 
+  // Comprobación única de estado de administrador
   useEffect(() => {
-    if (!currentBaby) return;
-    loadCaregivers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentBaby?.id]);
+    const checkAdminStatus = async () => {
+      if (!currentBaby?.id || !user?.id) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
 
-  const loadCaregivers = async () => {
-    if (!currentBaby) return;
-    try {
-      setLoading(true);
-      setError(null);
+      try {
+        const { data, error } = await supabase
+          .from('caregivers')
+          .select('role')
+          .eq('baby_id', currentBaby.id)
+          .eq('user_id', user.id)
+          .single();
 
-      // OJO: ahora embebemos profiles(email) (no users)
-      const { data, error } = await supabase
-        .from('caregivers')
-        .select('id,user_id,role,created_by, profiles(email)')
-        .eq('baby_id', currentBaby.id);
+        if (error) {
+          console.error('Error verificando estado de admin:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data?.role === 'admin');
+        }
+      } catch (error) {
+        console.error('Error general verificando admin:', error);
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      if (error) throw error;
+    checkAdminStatus();
+  }, [currentBaby, user]);
 
-      setItems(
-        (data || []).map((row) => ({
-          id: row.id,
-          user_id: row.user_id,
-          role: row.role,
-          email: row.profiles?.email || '(sin email)'
-        }))
-      );
-    } catch (e) {
-      console.error(e);
-      setError(e.message);
-    } finally {
-      setLoading(false);
+  // Cargar cuidadores solo si es admin
+  useEffect(() => {
+    const loadCaregivers = async () => {
+      if (!isAdmin || !currentBaby?.id) return;
+
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('caregivers')
+          .select('id, role, user_id')
+          .eq('baby_id', currentBaby.id);
+
+        if (error) throw error;
+
+        // Enriquecer con información de usuarios
+        const enrichedCaregivers = [];
+        for (const caregiver of data || []) {
+          try {
+            const { data: userData } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', caregiver.user_id)
+              .single();
+              
+            enrichedCaregivers.push({
+              id: caregiver.id,
+              email: userData?.email || 'Usuario desconocido',
+              role: caregiver.role
+            });
+          } catch (error) {
+            console.error('Error obteniendo datos de usuario:', error);
+          }
+        }
+
+        setCaregivers(enrichedCaregivers);
+      } catch (error) {
+        console.error('Error cargando cuidadores:', error);
+        setError('Error al cargar los cuidadores. Intenta de nuevo más tarde.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAdmin) {
+      loadCaregivers();
     }
-  };
+  }, [isAdmin, currentBaby]);
 
-  const handleInviteByEmail = async (e) => {
+  const handleShareBaby = async (e) => {
     e.preventDefault();
-    if (!currentBaby) return;
-    const email = inviteEmail.trim().toLowerCase();
-    if (!email) return;
+    
+    if (!isAdmin || !currentBaby?.id) {
+      alert('No tienes permisos para compartir este bebé');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
-
-      // upsert en pending_caregivers (necesita UNIQUE(baby_id, lower(email)))
-      const { error } = await supabase
-        .from('pending_caregivers')
-        .upsert(
-          [{
-            baby_id: currentBaby.id,
-            email,
-            role: inviteRole,
-            invited_by: user.id
-          }],
-          { onConflict: 'baby_id,email' }
-        );
-
-      if (error) throw error;
-
-      // Si el invitado YA existe en auth.users (y por tanto en profiles),
-      // podríamos adjuntarlo inmediatamente (best effort).
-      // De lo contrario, el TRIGGER lo hará cuando se registre.
-      const { data: maybeProfile } = await supabase
+      
+      // Verificar si el usuario existe
+      const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
-        .maybeSingle();
+        .single();
 
-      if (maybeProfile?.id) {
-        // crea caregiver si no existe
-        await supabase
-          .from('caregivers')
-          .upsert(
-            [{
-              baby_id: currentBaby.id,
-              user_id: maybeProfile.id,
-              role: inviteRole,
-              created_by: user.id
-            }],
-            { onConflict: 'baby_id,user_id' }
-          );
+      if (userError) {
+        // Usuario no encontrado, generar enlace de invitación
+        const inviteCode = Math.random().toString(36).substring(2, 15);
+        const link = `${window.location.origin}/invite?code=${inviteCode}&baby=${currentBaby.id}&role=${role}`;
+        setShareLink(link);
+        setShowShareLink(true);
+        setLoading(false);
+        return;
       }
 
-      setInviteEmail('');
-      await loadCaregivers();
-      alert('Invitación registrada. Si el usuario aún no existe, se adjuntará automáticamente cuando se registre.');
-    } catch (e) {
-      console.error(e);
-      setError(e.message);
+      // Verificar si ya tiene acceso
+      const { data: existingAccess } = await supabase
+        .from('caregivers')
+        .select('id')
+        .eq('baby_id', currentBaby.id)
+        .eq('user_id', userData.id);
+
+      if (existingAccess && existingAccess.length > 0) {
+        alert('Este usuario ya tiene acceso a este bebé');
+        setLoading(false);
+        return;
+      }
+
+      // Añadir acceso
+      const { data, error } = await supabase
+        .from('caregivers')
+        .insert([
+          {
+            baby_id: currentBaby.id,
+            user_id: userData.id,
+            role: role,
+            created_by: user.id
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Añadir a la lista local
+      setCaregivers([...caregivers, {
+        id: data?.[0]?.id || 'temp_id',
+        email,
+        role
+      }]);
+
+      alert('Se ha compartido el bebé correctamente');
+      setEmail('');
+    } catch (error) {
+      console.error('Error compartiendo bebé:', error);
+      setError('Error al compartir el bebé. Intenta de nuevo más tarde.');
     } finally {
       setLoading(false);
     }
   };
 
-  const buildShareLink = async () => {
-    if (!currentBaby) return;
-    // Link “opcional” por si quieres compartir enlace además del email
-    // (puedes cambiar la ruta si usas /invite o /join)
-    const code = Math.random().toString(36).slice(2, 12);
-    const url = `${window.location.origin}/invite?code=${code}&baby=${currentBaby.id}&role=${inviteRole}`;
-    setShareUrl(url);
+  const handleRemoveAccess = async (caregiverId) => {
+    if (!isAdmin || !currentBaby?.id) {
+      alert('No tienes permisos para eliminar este acceso');
+      return;
+    }
 
-    // Si quieres guardar el code en tu tabla 'invitations', hazlo aquí
-    // (no es obligatorio para el flujo por email)
-    // await supabase.from('invitations').insert([{ baby_id: currentBaby.id, code, role: inviteRole, created_by: user.id, expires_at: new Date(Date.now()+7*864e5).toISOString() }]);
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('caregivers')
+        .delete()
+        .eq('id', caregiverId);
+
+      if (error) throw error;
+
+      // Actualizar la lista local
+      setCaregivers(caregivers.filter(c => c.id !== caregiverId));
+      alert('Se ha eliminado el acceso correctamente');
+    } catch (error) {
+      console.error('Error eliminando acceso:', error);
+      setError('Error al eliminar el acceso. Intenta de nuevo más tarde.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleUpdateRole = async (caregiverId, newRole) => {
+    if (!isAdmin || !currentBaby?.id) {
+      alert('No tienes permisos para actualizar este rol');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('caregivers')
+        .update({ role: newRole })
+        .eq('id', caregiverId);
+
+      if (error) throw error;
+
+      // Actualizar la lista local
+      setCaregivers(caregivers.map(c => 
+        c.id === caregiverId ? { ...c, role: newRole } : c
+      ));
+      
+      alert('Se ha actualizado el rol correctamente');
+    } catch (error) {
+      console.error('Error actualizando rol:', error);
+      setError('Error al actualizar el rol. Intenta de nuevo más tarde.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    alert('Enlace copiado al portapapeles');
+  };
+
+  if (loading && !currentBaby) {
+    return (
+      <div className="caregivers-page">
+        <h1>Cuidadores</h1>
+        <p>Cargando...</p>
+      </div>
+    );
+  }
+
+  if (!currentBaby || !user) {
+    return (
+      <div className="caregivers-page">
+        <h1>Cuidadores</h1>
+        <p>No hay un bebé seleccionado o necesitas iniciar sesión.</p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Caregivers</h2>
-
-      {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-
-      {!currentBaby && <p>Selecciona un bebé.</p>}
-
-      {currentBaby && (
+    <div className="caregivers-page">
+      <h1>Cuidadores</h1>
+      <p className="baby-info">
+        Administrando para <strong>{currentBaby.name}</strong>
+      </p>
+      
+      {error && (
+        <div className="error-message">
+          {error}
+          <button onClick={() => setError(null)}>Cerrar</button>
+        </div>
+      )}
+      
+      {isAdmin ? (
         <>
-          <form onSubmit={handleInviteByEmail} style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <form onSubmit={handleShareBaby} className="share-form">
+            <div className="form-group">
+              <label htmlFor="email">Correo electrónico:</label>
               <input
                 type="email"
-                placeholder="correo@ejemplo.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                style={{ padding: 8, minWidth: 260 }}
+                disabled={loading}
               />
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value)}
-                style={{ padding: 8 }}
-              >
-                <option value="collaborator">Colaborador</option>
-                <option value="viewer">Lector</option>
-                <option value="admin">Admin</option>
-              </select>
-              <button type="submit" disabled={loading}>
-                {loading ? 'Enviando...' : 'Invitar por email'}
-              </button>
-              <button type="button" onClick={buildShareLink}>Generar link</button>
             </div>
+            
+            <div className="form-group">
+              <label htmlFor="role">Rol:</label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={loading}
+              >
+                <option value="readonly">Solo lectura</option>
+                <option value="collaborator">Colaborador</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading || !email}
+              className="share-button"
+            >
+              {loading ? 'Cargando...' : 'Compartir'}
+            </button>
           </form>
 
-          {shareUrl && (
-            <div style={{ marginBottom: 16 }}>
-              <label>Link para compartir:</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input readOnly value={shareUrl} style={{ flex: 1, padding: 8 }} />
-                <button onClick={() => { navigator.clipboard.writeText(shareUrl); }}>Copiar</button>
+          {showShareLink && shareLink && (
+            <div className="share-link-container">
+              <h3>Enlace de invitación</h3>
+              <p className="share-link">{shareLink}</p>
+              <div className="link-buttons">
+                <button 
+                  onClick={() => copyToClipboard(shareLink)}
+                  className="copy-button"
+                >
+                  Copiar enlace
+                </button>
+                <button 
+                  onClick={() => setShowShareLink(false)}
+                  className="close-button"
+                >
+                  Cerrar
+                </button>
               </div>
-              <small>El link es opcional; el flujo por email funciona sin él.</small>
             </div>
           )}
-
-          <h3>Asignados</h3>
-          {loading ? <p>Cargando...</p> : (
-            <ul>
-              {items.map(it => (
-                <li key={it.id} style={{ marginBottom: 6 }}>
-                  <strong>{it.email}</strong> — {it.role}
-                </li>
-              ))}
-              {items.length === 0 && <li>No hay caregivers aún.</li>}
-            </ul>
+          
+          {caregivers.length > 0 && (
+            <div className="caregivers-list">
+              <h3>Cuidadores actuales</h3>
+              <ul>
+                {caregivers.map(caregiver => (
+                  <li key={caregiver.id} className="caregiver-item">
+                    <div className="caregiver-info">
+                      <span className="caregiver-email">{caregiver.email}</span>
+                      <span className="caregiver-role">
+                        {caregiver.role === 'admin' ? 'Administrador' : 
+                         caregiver.role === 'collaborator' ? 'Colaborador' : 'Solo lectura'}
+                      </span>
+                    </div>
+                    <div className="caregiver-actions">
+                      <select
+                        value={caregiver.role}
+                        onChange={(e) => handleUpdateRole(caregiver.id, e.target.value)}
+                        disabled={loading}
+                        aria-label="Cambiar rol"
+                      >
+                        <option value="readonly">Solo lectura</option>
+                        <option value="collaborator">Colaborador</option>
+                        <option value="admin">Administrador</option>
+                      </select>
+                      <button 
+                        onClick={() => handleRemoveAccess(caregiver.id)}
+                        disabled={loading}
+                        className="remove-button"
+                        aria-label="Eliminar acceso"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </>
+      ) : (
+        <div className="not-authorized">
+          <p>No tienes permisos para gestionar cuidadores para este bebé.</p>
+        </div>
       )}
     </div>
   );
-}
+};
+
+export default Caregivers;

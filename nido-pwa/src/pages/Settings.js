@@ -1,5 +1,5 @@
 // src/pages/Settings.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBaby } from '../contexts/BabyContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -7,11 +7,21 @@ import './Settings.css';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
-  const { currentBaby, babies } = useBaby();
+  const { 
+    currentBaby, 
+    babies, 
+    deleteBaby, 
+    listCaregivers, 
+    removeCaregiver, 
+    updateCaregiverRole, 
+    cancelPendingInvite 
+  } = useBaby();
   const { darkMode, setDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const [caregivers, setCaregivers] = useState({ confirmed: [], pending: [] });
+  const [showCaregivers, setShowCaregivers] = useState(false);
   
   // Estado para opciones de notificaciones
   const [notifications, setNotifications] = useState({
@@ -19,6 +29,30 @@ const Settings = () => {
     sleepReminders: true,
     diaperReminders: false
   });
+
+  // Cargar colaboradores cuando se selecciona mostrarlos
+  useEffect(() => {
+    if (showCaregivers && currentBaby) {
+      loadCaregivers();
+    }
+  }, [showCaregivers, currentBaby]);
+
+  const loadCaregivers = async () => {
+    try {
+      const data = await listCaregivers(currentBaby.id);
+      setCaregivers(data);
+    } catch (error) {
+      console.error('Error cargando cuidadores:', error);
+      showMessage('Error cargando colaboradores', 'error');
+    }
+  };
+
+  // Verificar si el usuario actual es admin del bebé actual
+  const isCurrentUserAdmin = () => {
+    if (!currentBaby || !user) return false;
+    const userCaregiver = caregivers.confirmed.find(c => c.user_id === user.id);
+    return userCaregiver?.role === 'admin';
+  };
 
   const handleNotificationChange = (setting) => {
     setNotifications(prev => ({
@@ -35,6 +69,110 @@ const Settings = () => {
     console.log('Toggle modo oscuro:', isChecked ? 'ACTIVADO' : 'DESACTIVADO');
     setDarkMode(isChecked);
     showMessage(`Modo oscuro ${isChecked ? 'activado' : 'desactivado'}`, 'success');
+  };
+
+  const handleDeleteBaby = async () => {
+    if (!currentBaby) return;
+    
+    if (window.confirm(`¿Eliminar "${currentBaby.name}" y todos sus datos? Esta acción no se puede deshacer.`)) {
+      try {
+        setLoading(true);
+        await deleteBaby(currentBaby.id);
+        showMessage('Bebé eliminado correctamente', 'success');
+      } catch (error) {
+        console.error('Error eliminando bebé:', error);
+        showMessage('Error eliminando bebé: ' + error.message, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleRemoveCaregiver = async (caregiverId, userId) => {
+    if (!currentBaby) return;
+    
+    if (!isCurrentUserAdmin()) {
+      showMessage('No tienes permisos para eliminar colaboradores', 'error');
+      return;
+    }
+
+    if (userId === user.id) {
+      showMessage('No puedes eliminarte a ti mismo', 'error');
+      return;
+    }
+
+    const caregiver = caregivers.confirmed.find(c => c.id === caregiverId);
+    if (!caregiver) return;
+
+    if (!window.confirm(`¿Eliminar acceso de ${caregiver.profiles?.email || 'este usuario'}?`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await removeCaregiver(currentBaby.id, userId);
+      showMessage('Colaborador eliminado correctamente', 'success');
+      await loadCaregivers();
+    } catch (error) {
+      console.error('Error eliminando colaborador:', error);
+      showMessage('Error eliminando colaborador: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (caregiverId, userId, newRole) => {
+    if (!currentBaby) return;
+    
+    if (!isCurrentUserAdmin()) {
+      showMessage('No tienes permisos para cambiar roles', 'error');
+      return;
+    }
+
+    if (userId === user.id) {
+      showMessage('No puedes cambiar tu propio rol', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await updateCaregiverRole(currentBaby.id, userId, newRole);
+      showMessage('Rol actualizado correctamente', 'success');
+      await loadCaregivers();
+    } catch (error) {
+      console.error('Error actualizando rol:', error);
+      showMessage('Error actualizando rol: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelInvite = async (pendingId) => {
+    if (!isCurrentUserAdmin()) {
+      showMessage('No tienes permisos para cancelar invitaciones', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await cancelPendingInvite(pendingId);
+      showMessage('Invitación cancelada', 'success');
+      await loadCaregivers();
+    } catch (error) {
+      console.error('Error cancelando invitación:', error);
+      showMessage('Error cancelando invitación: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRoleDisplayName = (role) => {
+    const roles = {
+      'admin': 'Administrador',
+      'collaborator': 'Colaborador',
+      'viewer': 'Solo lectura'
+    };
+    return roles[role] || role;
   };
 
   const handleExportData = async () => {
@@ -157,6 +295,132 @@ const Settings = () => {
       {message && (
         <div className={`settings-message ${messageType}`}>
           {message}
+        </div>
+      )}
+      
+      {/* Sección de gestión de bebés */}
+      {currentBaby && (
+        <div className="settings-section">
+          <h3>Gestión de Bebé</h3>
+          
+          <div className="baby-info-card">
+            <h4>Bebé actual: {currentBaby.name}</h4>
+            {currentBaby.birthdate && (
+              <p>Fecha de nacimiento: {currentBaby.birthdate}</p>
+            )}
+          </div>
+          
+          <div className="setting-item">
+            <div className="setting-info">
+              <div className="setting-name">Gestionar colaboradores</div>
+              <div className="setting-description">
+                Ver y gestionar quién tiene acceso a "{currentBaby.name}".
+              </div>
+            </div>
+            <button 
+              className="manage-button"
+              onClick={() => setShowCaregivers(!showCaregivers)}
+              disabled={loading}
+            >
+              {showCaregivers ? 'Ocultar' : 'Ver Colaboradores'}
+            </button>
+          </div>
+
+          {showCaregivers && (
+            <div className="caregivers-section">
+              {/* Colaboradores confirmados */}
+              <div className="caregivers-list">
+                <h5>Colaboradores Activos ({caregivers.confirmed.length})</h5>
+                {caregivers.confirmed.length === 0 ? (
+                  <p className="no-caregivers">No hay colaboradores</p>
+                ) : (
+                  caregivers.confirmed.map(caregiver => (
+                    <div key={caregiver.id} className="caregiver-item">
+                      <div className="caregiver-info">
+                        <div className="caregiver-email">
+                          {caregiver.profiles?.email || 'Email no disponible'}
+                        </div>
+                        <div className="caregiver-role-current">
+                          {getRoleDisplayName(caregiver.role)}
+                        </div>
+                      </div>
+                      
+                      <div className="caregiver-controls">
+                        <select
+                          value={caregiver.role}
+                          onChange={(e) => handleRoleChange(caregiver.id, caregiver.user_id, e.target.value)}
+                          disabled={!isCurrentUserAdmin() || caregiver.user_id === user.id || loading}
+                          className="role-select"
+                        >
+                          <option value="viewer">Solo lectura</option>
+                          <option value="collaborator">Colaborador</option>
+                          <option value="admin">Administrador</option>
+                        </select>
+                        
+                        <button
+                          className="remove-caregiver-btn"
+                          onClick={() => handleRemoveCaregiver(caregiver.id, caregiver.user_id)}
+                          disabled={!isCurrentUserAdmin() || caregiver.user_id === user.id || loading}
+                          title="Eliminar colaborador"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Invitaciones pendientes */}
+              {caregivers.pending.length > 0 && (
+                <div className="pending-list">
+                  <h5>Invitaciones Pendientes ({caregivers.pending.length})</h5>
+                  {caregivers.pending.map(pending => (
+                    <div key={pending.id} className="pending-item">
+                      <div className="pending-info">
+                        <div className="pending-email">{pending.email}</div>
+                        <div className="pending-role">{getRoleDisplayName(pending.role)}</div>
+                        <div className="pending-date">
+                          Invitado: {new Date(pending.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      
+                      <button
+                        className="cancel-invite-btn"
+                        onClick={() => handleCancelInvite(pending.id)}
+                        disabled={!isCurrentUserAdmin() || loading}
+                        title="Cancelar invitación"
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!isCurrentUserAdmin() && (
+                <div className="admin-warning">
+                  ⚠️ Solo los administradores pueden gestionar colaboradores
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="setting-item danger-zone">
+            <div className="setting-info">
+              <div className="setting-name">Eliminar bebé</div>
+              <div className="setting-description">
+                Eliminar permanentemente "{currentBaby.name}" y todos sus datos.
+              </div>
+            </div>
+            <button 
+              className="danger-button"
+              onClick={handleDeleteBaby}
+              disabled={loading}
+            >
+              {loading ? 'Eliminando...' : '🗑️ Eliminar Bebé'}
+            </button>
+          </div>
         </div>
       )}
       

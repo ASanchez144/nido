@@ -447,38 +447,65 @@ export const TrackingProvider = ({ children }) => {
   // ────────────────────────────────────────────────────────────────────────────────
   // Pañal
 
-  const addDiaperEvent = async (type, notes = '') => {
-    if (!currentBaby || !user) throw new Error('Bebé o usuario no disponible');
-    if (!['wet', 'dirty', 'mixed'].includes((type || '').toLowerCase())) {
-      throw new Error('Tipo de pañal inválido');
+// PARTE MODIFICADA del TrackingContext.js
+// Solo incluyo la función addDiaperEvent corregida
+
+// FUNCIÓN CORREGIDA - SIN campo metadata que no existe en la BD
+
+const addDiaperEvent = async (type, details = {}) => {
+  if (!currentBaby || !user) throw new Error('Bebé o usuario no disponible');
+  if (!['wet', 'dirty', 'mixed'].includes((type || '').toLowerCase())) {
+    throw new Error('Tipo de pañal inválido');
+  }
+  
+  try {
+    // Extraer datos del objeto details si es un objeto, o usar como string si es texto simple
+    let notes = '';
+    
+    if (typeof details === 'string') {
+      // Si details es un string, usarlo como notas
+      notes = details;
+    } else if (details && typeof details === 'object') {
+      // Si details es un objeto, extraer los campos y crear texto descriptivo
+      const { color, texture, hasMucus, notes: providedNotes } = details;
+      
+      // Construir las notas a partir de los detalles
+      const notesParts = [];
+      if (color) notesParts.push(`Color: ${color}`);
+      if (texture) notesParts.push(`Textura: ${texture}`);
+      if (hasMucus) notesParts.push('Con mocos');
+      if (providedNotes) notesParts.push(providedNotes);
+      
+      notes = notesParts.join(', ');
     }
-    try {
-      const payload = {
-        baby_id: currentBaby.id,
-        caregiver_id: user.id,
-        user_id: user.id,
-        created_by: user.id,
-        type: type.toLowerCase(),
-        timestamp: new Date().toISOString(),
-        notes: notes?.trim() || null,
-        updated_at: new Date().toISOString()
-      };
 
-      const { data, error } = await supabase
-        .from('diaper_events')
-        .insert([payload])
-        .select('*')
-        .single();
+    // Payload SIN metadata - usando solo las columnas que existen en la tabla
+    const payload = {
+      baby_id: currentBaby.id,
+      caregiver_id: user.id,
+      user_id: user.id,
+      created_by: user.id,
+      type: type.toLowerCase(),
+      timestamp: new Date().toISOString(),
+      notes: notes || null, // Ahora siempre será string o null
+      updated_at: new Date().toISOString()
+    };
 
-      if (error) throw error;
+    const { data, error } = await supabase
+      .from('diaper_events')
+      .insert([payload])
+      .select('*')
+      .single();
 
-      await loadTodayData();
-      return data;
-    } catch (err) {
-      console.error('💩 TrackingContext: Error en addDiaperEvent:', err);
-      throw err;
-    }
-  };
+    if (error) throw error;
+
+    await loadTodayData();
+    return data;
+  } catch (err) {
+    console.error('💩 TrackingContext: Error en addDiaperEvent:', err);
+    throw err;
+  }
+};
 
   // ────────────────────────────────────────────────────────────────────────────────
   // Peso

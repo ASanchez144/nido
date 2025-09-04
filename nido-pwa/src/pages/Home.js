@@ -1,9 +1,10 @@
 // src/pages/Home.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
 import { useTracking } from '../contexts/TrackingContext';
 import BabySetup from '../components/baby/BabySetup';
+import StoolModal from '../components/modals/StoolModal';
 import './Home.css';
 
 const Home = () => {
@@ -22,17 +23,16 @@ const Home = () => {
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showStoolDetails, setShowStoolDetails] = useState(false);
   const [pendingDiaperType, setPendingDiaperType] = useState('');
-  const [stoolDetails, setStoolDetails] = useState({
-    color: '',
-    texture: '',
-    hasMucus: false
-  });
   const [localError, setLocalError] = useState('');
   
   // Estados para timer
   const [feedingElapsedTime, setFeedingElapsedTime] = useState(0);
   const [sleepElapsedTime, setSleepElapsedTime] = useState(0);
   const [lastBreast, setLastBreast] = useState('');
+
+  // Refs para los timers
+  const timerRef = useRef(null);
+  const sleepTimerRef = useRef(null);
 
   // Stats del día (alineado con TrackingContext.getTodayStats)
   const todayStats = currentBaby ? getTodayStats() : {
@@ -52,40 +52,40 @@ const Home = () => {
     }
   }, [currentBaby]);
 
-  // Timer alimentación CON DEBUG
+  // Timer alimentación OPTIMIZADO - SOLO cuando NO hay modal abierto
   useEffect(() => {
-    console.log('🔄 Timer alimentación - currentFeedingSession:', currentFeedingSession);
+    if (showStoolDetails) return; // STOP TOTAL cuando modal está abierto
     
-    let interval;
     if (currentFeedingSession) {
-      console.log('⏱️ Iniciando timer para sesión:', currentFeedingSession);
-      
       const updateTimer = () => {
         const start = new Date(currentFeedingSession.start_time);
         const now = new Date();
         const elapsed = now - start;
         setFeedingElapsedTime(elapsed);
-        console.log('⏰ Timer actualizado:', { start: start.toLocaleTimeString(), elapsed });
       };
       
       updateTimer();
-      interval = setInterval(updateTimer, 1000);
+      timerRef.current = setInterval(updateTimer, 1000);
     } else {
-      console.log('❌ No hay sesión activa, reseteando timer');
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       setFeedingElapsedTime(0);
     }
     
     return () => {
-      if (interval) {
-        console.log('🧹 Limpiando interval de alimentación');
-        clearInterval(interval);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
-  }, [currentFeedingSession]);
+  }, [currentFeedingSession, showStoolDetails]); // Para cuando se cierre el modal
 
-  // Timer sueño
+  // Timer sueño OPTIMIZADO - SOLO cuando NO hay modal abierto
   useEffect(() => {
-    let interval;
+    if (showStoolDetails) return; // STOP TOTAL cuando modal está abierto
+    
     if (currentSleepSession) {
       const updateTimer = () => {
         const start = new Date(currentSleepSession.start_time);
@@ -94,15 +94,22 @@ const Home = () => {
       };
       
       updateTimer();
-      interval = setInterval(updateTimer, 1000);
+      sleepTimerRef.current = setInterval(updateTimer, 1000);
     } else {
+      if (sleepTimerRef.current) {
+        clearInterval(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+      }
       setSleepElapsedTime(0);
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (sleepTimerRef.current) {
+        clearInterval(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+      }
     };
-  }, [currentSleepSession]);
+  }, [currentSleepSession, showStoolDetails]); // Para cuando se cierre el modal
 
   const handleBabySetupComplete = (newBaby) => {
     console.log('✅ Home: Baby creado con éxito:', newBaby);
@@ -112,16 +119,11 @@ const Home = () => {
     try {
       setLocalError('');
       
-      console.log('🍼 handleFeedingAction llamado:', { type, side, currentFeedingSession });
-      
       if (currentFeedingSession) {
-        console.log('⏹️ Terminando sesión existente:', currentFeedingSession.id);
         await endFeedingSession(currentFeedingSession.id);
-        // Guardar último pecho
         localStorage.setItem(`lastBreast_${currentBaby.id}`, currentFeedingSession.breast);
         setLastBreast(currentFeedingSession.breast);
       } else {
-        console.log('▶️ Iniciando nueva sesión:', { type, side });
         const result = await startFeedingSession(type, side);
         console.log('✅ Sesión creada:', result);
       }
@@ -164,17 +166,9 @@ const Home = () => {
     }
   };
 
-  const handleStoolSubmit = async () => {
-    try {
-      setLocalError('');
-      await addDiaperEvent(pendingDiaperType, stoolDetails);
-      setShowStoolDetails(false);
-      setStoolDetails({ color: '', texture: '', hasMucus: false });
-      setPendingDiaperType('');
-    } catch (error) {
-      console.error('Error en pañal:', error);
-      setLocalError('Error: ' + error.message);
-    }
+  const handleStoolModalClose = () => {
+    setShowStoolDetails(false);
+    setPendingDiaperType('');
   };
 
   const formatDuration = (milliseconds) => {
@@ -216,159 +210,6 @@ const Home = () => {
   if (babies.length === 0) {
     return <BabySetup onComplete={handleBabySetupComplete} />;
   }
-
-  // Modal de detalles de caca
-  const StoolDetailsModal = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '25px',
-        width: '90%',
-        maxWidth: '400px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-        maxHeight: '80vh',
-        overflowY: 'auto'
-      }}>
-        <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#007bff' }}>
-          Detalles de la Caca
-        </h3>
-        
-        {/* Selector de Color */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-            Color:
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-            {[
-              { value: 'yellow', label: '🟡 Amarillo' },
-              { value: 'brown', label: '🟤 Marrón' },
-              { value: 'green', label: '🟢 Verde' },
-              { value: 'orange', label: '🟠 Naranja' },
-              { value: 'red', label: '🔴 Rojizo' },
-              { value: 'black', label: '⚫ Negro' },
-              { value: 'white', label: '⚪ Blanco' },
-              { value: 'dark_green', label: '🟢 Verde oscuro' }
-            ].map(color => (
-              <button
-                key={color.value}
-                onClick={() => setStoolDetails(prev => ({ ...prev, color: color.value }))}
-                style={{
-                  padding: '10px 8px',
-                  border: stoolDetails.color === color.value ? '3px solid #007bff' : '2px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: stoolDetails.color === color.value ? '#f0f8ff' : 'white',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  textAlign: 'center'
-                }}
-              >
-                {color.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Selector de Textura */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-            Textura:
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {[
-              { value: 'soft_seedy', label: '🌱 Suave con semillitas' },
-              { value: 'watery', label: '💧 Líquida/aguada' },
-              { value: 'pasty', label: '🥜 Pastosa' },
-              { value: 'firm_formed', label: '🥖 Firme y formada' },
-              { value: 'soft_formed', label: '🍞 Suave pero formada' },
-              { value: 'hard_pellets', label: '🔵 Bolitas duras' },
-              { value: 'very_watery', label: '🌊 Muy líquida' },
-              { value: 'mucousy', label: '🫧 Con mucosidad' }
-            ].map(texture => (
-              <button
-                key={texture.value}
-                onClick={() => setStoolDetails(prev => ({ ...prev, texture: texture.value }))}
-                style={{
-                  padding: '12px 8px',
-                  border: stoolDetails.texture === texture.value ? '3px solid #007bff' : '2px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: stoolDetails.texture === texture.value ? '#f0f8ff' : 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  textAlign: 'center'
-                }}
-              >
-                {texture.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mocos */}
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={stoolDetails.hasMucus}
-              onChange={(e) => setStoolDetails(prev => ({ ...prev, hasMucus: e.target.checked }))}
-              style={{ marginRight: '8px' }}
-            />
-            <span>🟢 Contiene mocos</span>
-          </label>
-        </div>
-
-        {/* Botones */}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            onClick={handleStoolSubmit}
-            style={{
-              flex: 1,
-              padding: '14px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            Registrar
-          </button>
-          
-          <button 
-            onClick={() => {
-              setShowStoolDetails(false);
-              setStoolDetails({ color: '', texture: '', hasMucus: false });
-              setPendingDiaperType('');
-            }}
-            style={{
-              flex: 1,
-              padding: '14px',
-              backgroundColor: '#f5f5f5',
-              color: '#666',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 
   // HOME PRINCIPAL
   return (
@@ -524,7 +365,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Enlaces navegación MÁS PEQUEÑOS */}
+          {/* Enlaces navegación MÁS PEQUEÑOS 
           <div className="home-buttons">
             <Link to="/night-mode" className="home-button night-mode-button">
               🌙 Modo Noche
@@ -533,7 +374,7 @@ const Home = () => {
             <Link to="/stats" className="home-button stats-button">
               📊 Estadísticas
             </Link>
-          </div>
+          </div>*/}
         </>
       ) : (
         <div className="no-baby-selected">
@@ -583,7 +424,12 @@ const Home = () => {
         </div>
       )}
 
-      {showStoolDetails && <StoolDetailsModal />}
+      {/* Modal de detalles de caca - COMPONENTE SEPARADO */}
+      <StoolModal 
+        isOpen={showStoolDetails}
+        onClose={handleStoolModalClose}
+        diaperType={pendingDiaperType}
+      />
     </div>
   );
 };
