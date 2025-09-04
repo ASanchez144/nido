@@ -144,15 +144,16 @@ const Caregivers = () => {
 
       // Añadir acceso
       const { data, error } = await supabase
-        .from('caregivers')
-        .insert([
-          {
-            baby_id: currentBaby.id,
-            user_id: userData.id,
-            role: role,
-            created_by: user.id
-          }
-        ]);
+      .from('caregivers')
+      .insert([
+        {
+          baby_id: currentBaby.id,
+          user_id: userData.id,
+          role: role,
+          created_by: user.id
+        }
+      ])
+      .select('id'); // <-- devuelve el id real
 
       if (error) throw error;
 
@@ -358,7 +359,7 @@ const Caregivers = () => {
                       <button 
                         onClick={() => handleRemoveAccess(caregiver.id)}
                         disabled={loading}
-                        className="remove-button"
+                        className="remove-btn"
                         aria-label="Eliminar acceso"
                       >
                         Eliminar

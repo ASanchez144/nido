@@ -47,7 +47,7 @@ const Header = () => {
     <header className="app-header">
       <div className="header-content">
         <Link to="/" className="logo">
-          🪺 Baby Habits
+          👶
         </Link>
 
         <div className="header-actions">
