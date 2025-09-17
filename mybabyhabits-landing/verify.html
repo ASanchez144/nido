@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Your Email - MyBabyHabits</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .email-icon {
+            font-size: 4rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .email-display {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .steps {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: left;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            background: rgba(255, 255, 255, 0.2);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-text {
+            flex: 1;
+        }
+        
+        .back-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            display: inline-block;
+            transition: opacity 0.3s ease;
+        }
+        
+        .back-link:hover {
+            opacity: 1;
+        }
+        
+        .spam-notice {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .resend-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .resend-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .resend-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-icon">📧</div>
+        
+        <h1>Check Your Email</h1>
+        <p class="subtitle">We've sent you an access request confirmation</p>
+        
+        <div class="email-display" id="emailDisplay">
+            <!-- Email will be populated by JavaScript -->
+        </div>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-text">
+                    <strong>We received your request</strong><br>
+                    Your email is now in our early access queue
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-text">
+                    <strong>We'll review your request</strong><br>
+                    This usually takes 24-48 hours
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-text">
+                    <strong>Get your access link</strong><br>
+                    We'll send you a direct link to create your account
+                </div>
+            </div>
+        </div>
+        
+        <div class="spam-notice">
+            <strong>⚠️ Check your spam folder</strong><br>
+            Sometimes our emails end up there. Add hello@mybabyhabits.com to your contacts.
+        </div>
+        
+        <div class="resend-section">
+            <p style="margin-bottom: 15px; opacity: 0.8;">Didn't receive anything?</p>
+            <button class="resend-btn" onclick="resendRequest()">Resend Request</button>
+        </div>
+        
+        <a href="/" class="back-link">← Back to homepage</a>
+    </div>
+
+    <script>
+        // Mostrar el email desde URL parameter o localStorage
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email') || localStorage.getItem('pendingEmail') || 'your-email@example.com';
+            
+            document.getElementById('emailDisplay').textContent = email;
+        });
+        
+        // Función para reenviar request
+        function resendRequest() {
+            const email = document.getElementById('emailDisplay').textContent;
+            
+            // Aquí iría la lógica para reenviar
+            // Por ahora, solo mostramos mensaje
+            alert('Request resent! Please check your email in a few minutes.');
+        }
+    </script>
+</body>
+</html>
