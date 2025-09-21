@@ -11,7 +11,7 @@ const HomeDebug = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>🪺 Nido - Home Debug</h1>
+      <h1>🪺 MyBabyHabits - Home Debug</h1>
       
       <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px' }}>
         <h3>🔑 Estado Auth:</h3>

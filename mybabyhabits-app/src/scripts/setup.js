@@ -13,7 +13,7 @@ const rl = readline.createInterface({
 const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 async function setup() {
-  console.log('🪺 Configuración de Nido PWA\n');
+  console.log('🪺 Configuración de MyBabyHabits PWA\n');
 
   try {
     // Verificar si ya existe .env.local

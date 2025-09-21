@@ -574,7 +574,7 @@ const Settings = () => {
         <h3>Acerca de</h3>
         
         <div className="about-info">
-          <p><strong>Nido</strong> - Versión 1.0.0</p>
+          <p><strong>MyBabyHabits</strong> - Versión 1.0.0</p>
           <p>Una aplicación para el seguimiento del cuidado de bebés.</p>
           <p>Desarrollada con ❤️ para ayudar a padres y cuidadores.</p>
           

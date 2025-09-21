@@ -1,16 +1,20 @@
-// src/App.js - Con ThemeProvider añadido
+// src/App.js - ROUTER INTELIGENTE FINAL VERIFICADO
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { BabyProvider } from './contexts/BabyContext'; 
 import { TrackingProvider } from './contexts/TrackingContext';
-import { ThemeProvider } from './contexts/ThemeContext'; // Importar ThemeProvider
+import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import PublicRoute from './components/auth/PublicRoute';
 import Header from './components/layout/Header';
 import NavBar from './components/layout/NavBar';
+
+// Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import LandingPage from './pages/LandingPage'; // ← NUEVA LANDING PAGE
 import NightMode from './pages/NightMode';
 import Stats from './pages/Stats';
 import Settings from './pages/Settings';
@@ -18,9 +22,12 @@ import Caregivers from './pages/Caregivers';
 import AddBaby from './pages/AddBaby';
 import JoinBaby from './pages/JoinBaby';
 import InvitePage from './pages/InvitePage';
+
+// Components
+import SmartHomePage from './components/SmartHomePage';
 import './App.css';
 
-// Componente de mantenimiento
+// Componente de mantenimiento (MANTENER COMO ESTABA)
 const MaintenancePage = () => (
   <div style={{ 
     textAlign: 'center', 
@@ -55,16 +62,16 @@ const MaintenancePage = () => (
 );
 
 function App() {
-  // Estado para controlar si mostramos mantenimiento o la app normal
+  // MANTENER COMO ESTABA - No tocar si no hay problemas
   const [maintenanceMode] = useState(false);
   
   return (
     <AuthProvider>
       <BabyProvider>
-        <ThemeProvider> {/* Envolver toda la aplicación con ThemeProvider */}
+        <ThemeProvider>
           <Router>
             {maintenanceMode ? (
-              // Modo mantenimiento con Router
+              // Modo mantenimiento MANTENER IGUAL
               <div className="app">
                 <Header />
                 <main className="main-content">
@@ -73,54 +80,135 @@ function App() {
                 <NavBar />
               </div>
             ) : (
-              // Aplicación normal
+              // Aplicación normal CON ROUTER INTELIGENTE
               <TrackingProvider>
                 <div className="app">
-                  <Header />
-                  
-                  <main className="main-content">
-                    <Routes>
-                      {/* Rutas públicas */}
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/register" element={<Register />} />
-                      {/* invitaciones */}
-                      <Route path="/invite" element={<InvitePage />} />
-                      <Route path="/join/:code" element={<InvitePage />} />
-                      {/* Rutas protegidas */}
-                      <Route path="/" element={
-                        <ProtectedRoute>
-                          <Home />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/night-mode" element={
-                        <ProtectedRoute>
-                          <NightMode />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/stats" element={
-                        <ProtectedRoute>
-                          <Stats />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/settings" element={
-                        <ProtectedRoute>
-                          <Settings />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/caregivers" element={
-                        <ProtectedRoute>
-                          <Caregivers />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/add-baby" element={
-                        <ProtectedRoute>
-                          <AddBaby />
-                        </ProtectedRoute>
-                      } />
-                    </Routes>
-                  </main>
-                  
-                  <NavBar />
+                  <Routes>
+                    {/* 🧠 RUTA INTELIGENTE: "/" decide automáticamente */}
+                    <Route path="/" element={<SmartHomePage />} />
+                    
+                    {/* 🎨 RUTA DIRECTA A LANDING (para testing) */}
+                    <Route path="/landing" element={<LandingPage />} />
+                    
+                    {/* 🔐 Rutas públicas CON layout normal */}
+                    <Route path="/login" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <PublicRoute>
+                            <Login />
+                          </PublicRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/register" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <PublicRoute>
+                            <Register />
+                          </PublicRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    {/* 📧 Invitaciones - MANTENER IGUAL */}
+                    <Route path="/invite" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <InvitePage />
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/join/:code" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <InvitePage />
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    {/* 🏠 Rutas protegidas - MANTENER IGUAL */}
+                    <Route path="/dashboard" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <ProtectedRoute>
+                            <Home />
+                          </ProtectedRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/night-mode" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <ProtectedRoute>
+                            <NightMode />
+                          </ProtectedRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/stats" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <ProtectedRoute>
+                            <Stats />
+                          </ProtectedRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/settings" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <ProtectedRoute>
+                            <Settings />
+                          </ProtectedRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/caregivers" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <ProtectedRoute>
+                            <Caregivers />
+                          </ProtectedRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                    
+                    <Route path="/add-baby" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <ProtectedRoute>
+                            <AddBaby />
+                          </ProtectedRoute>
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+                  </Routes>
                 </div>
               </TrackingProvider>
             )}
