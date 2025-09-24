@@ -1,0 +1,19 @@
+* [33m61f6c71[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m landing funcionando ingles
+* [33m0a09cb7[m[33m ([m[1;31morigin/main[m[33m)[m cambio vite.config
+* [33m41fd043[m Cambio nombre carpeta
+* [33mbcf5ecc[m Subida de la Landing
+* [33m16ec875[m eliminar colaboradores
+*   [33m44edd6e[m Merge branch 'main' of https://github.com/ASanchez144/nido
+[32m|[m[33m\[m  
+[32m|[m * [33ma43aebf[m Rename favicon.ico.ico to favicon.ico
+[32m|[m * [33mdb6e8f8[m Delete nido-pwa/public/favicon.ico
+[32m|[m * [33mad82e8e[m logos
+* [33m|[m [33ma550330[m Funcionando, con borrado, con panales
+[33m|[m[33m/[m  
+*   [33m818fd8e[m Merge branch 'main' of https://github.com/ASanchez144/nido
+[34m|[m[35m\[m  
+[34m|[m * [33m49364e1[m Update .nvmrc
+* [35m|[m [33m117471e[m Add missing web-vitals dependency
+[35m|[m[35m/[m  
+* [33m20468bb[m Force Node 20 with .nvmrc
+* [33mae324ba[m  Migración a Vite completada - listo para Netlify
