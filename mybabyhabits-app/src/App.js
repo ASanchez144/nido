@@ -22,6 +22,7 @@ import Caregivers from './pages/Caregivers';
 import AddBaby from './pages/AddBaby';
 import JoinBaby from './pages/JoinBaby';
 import InvitePage from './pages/InvitePage';
+import AuthCallback from './pages/AuthCallback';
 
 // Components
 import SmartHomePage from './components/SmartHomePage';
@@ -115,6 +116,16 @@ function App() {
                       </>
                     } />
                     
+                    <Route path="/auth/callback" element={
+                      <>
+                        <Header />
+                        <main className="main-content">
+                          <AuthCallback />
+                        </main>
+                        <NavBar />
+                      </>
+                    } />
+
                     {/* 📧 Invitaciones - MANTENER IGUAL */}
                     <Route path="/invite" element={
                       <>

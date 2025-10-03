@@ -13,8 +13,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signUp } = useAuth();
-
+  const { signUp, signInWithGoogle } = useAuth();
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -47,6 +46,20 @@ const Register = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setError('');
+      setLoading(true);
+
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Error al registrarse con Google:', error);
+      setError(error?.message || 'No pudimos conectar con Google. Inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return (
     <div className="auth-page">
       <div className="auth-container">
@@ -116,6 +129,22 @@ const Register = () => {
             {loading ? 'Creando cuenta...' : 'Registrarse'}
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>O crea tu cuenta con</span>
+        </div>
+
+        <div className="auth-oauth-buttons">
+          <button
+            type="button"
+            className="auth-google-button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <span className="google-icon" aria-hidden="true">G</span>
+            {loading ? 'Conectando...' : 'Continuar con Google'}
+          </button>
+        </div>
         
         <div className="auth-links">
           <p>

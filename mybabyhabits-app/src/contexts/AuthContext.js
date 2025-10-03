@@ -106,7 +106,7 @@ export function AuthProvider({ children }) {
         console.error('[Auth] Error canjeando invitación pendiente:', e);
       } finally {
         localStorage.removeItem('pendingInviteCode');
-        if (['/login', '/register'].includes(window.location.pathname)) {
+        if (['/login', '/register', '/auth/callback'].includes(window.location.pathname)) {
           window.location.replace('/');
         }
       }
@@ -118,6 +118,22 @@ export function AuthProvider({ children }) {
     if (error) throw error;
     return data;
   };
+  const signInWithGoogle = async () => {
+    const redirectTo = typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback`
+      : undefined;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        ...(redirectTo ? { redirectTo } : {}),
+      },
+    });
+
+    if (error) throw error;
+    return data;
+  };
+
 
   const signUp = async (email, password, firstName, lastName) => {
     const { data, error } = await supabase.auth.signUp({
@@ -134,6 +150,6 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   };
 
-  const value = { user, session, loading, signIn, signUp, signOut };
+  const value = { user, session, loading, signIn, signUp, signOut, signInWithGoogle };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

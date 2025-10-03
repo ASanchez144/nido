@@ -10,28 +10,40 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
 
   // src/pages/Login.js - Mejorar manejo de errores
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+
     try {
       setError('');
       setLoading(true);
-      
       console.log('Intentando iniciar sesión con:', email);
-      
       await signIn(email, password);
       navigate('/');
     } catch (error) {
       console.error('Error detallado al iniciar sesión:', error);
-      
       if (error.message) {
         setError(error.message);
       } else {
         setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setError('');
+      setLoading(true);
+
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Error al iniciar sesión con Google:', error);
+      setError(error?.message || 'No pudimos conectar con Google. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -72,6 +84,23 @@ const Login = () => {
           </button>
         </form>
         
+
+        <div className="auth-divider">
+          <span>O continúa con</span>
+        </div>
+
+        <div className="auth-oauth-buttons">
+          <button
+            type="button"
+            className="auth-google-button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <span className="google-icon" aria-hidden="true">G</span>
+            {loading ? 'Conectando...' : 'Continuar con Google'}
+          </button>
+        </div>
+
         <div className="auth-links">
           <p>
             ¿No tienes una cuenta? <Link to="/register">Regístrate</Link>
